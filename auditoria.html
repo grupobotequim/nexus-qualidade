@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Nexus Qualidade — Auditoria</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+  :root{ --azul:#1d4ed8; --verde:#16a34a; --amarelo:#ca8a04; --vermelho:#dc2626; --cinza:#6b7280; --bg:#f4f5f7; }
+  *{box-sizing:border-box;}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);margin:0;padding:0 0 100px;color:#111}
+  header{background:var(--azul);color:#fff;padding:14px 16px;position:sticky;top:0;z-index:10}
+  header h1{font-size:16px;margin:0}
+  header .sub{font-size:12px;opacity:.85;margin-top:2px}
+  main{padding:12px;max-width:640px;margin:0 auto}
+  .card{background:#fff;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  label{display:block;font-size:13px;font-weight:600;color:#444;margin-bottom:4px}
+  select,input[type=text],input[type=number],textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:8px;font-size:15px;margin-bottom:10px}
+  button{cursor:pointer;border:none;border-radius:8px;font-size:14px;font-weight:600}
+  .btn-primario{background:var(--azul);color:#fff;padding:14px;width:100%;font-size:16px}
+  .btn-secundario{background:#e5e7eb;color:#111;padding:10px 14px}
+  .area-titulo{font-size:15px;font-weight:700;margin:18px 0 8px;color:var(--azul)}
+  .pergunta{border-bottom:1px solid #eee;padding:10px 0}
+  .pergunta:last-child{border-bottom:none}
+  .pergunta-texto{font-size:14px;margin-bottom:8px}
+  .notas{display:flex;gap:6px}
+  .nota-btn{flex:1;padding:8px 0;border:2px solid #d1d5db;border-radius:8px;background:#fff;font-weight:700;font-size:13px;color:#555}
+  .nota-btn[data-v="1"].ativo{background:var(--vermelho);border-color:var(--vermelho);color:#fff}
+  .nota-btn[data-v="2"].ativo{background:var(--amarelo);border-color:var(--amarelo);color:#fff}
+  .nota-btn[data-v="3"].ativo{background:var(--verde);border-color:var(--verde);color:#fff}
+  .nota-btn[data-v="na"].ativo{background:var(--cinza);border-color:var(--cinza);color:#fff}
+  .responder-todas{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+  .responder-todas button{padding:6px 10px;font-size:12px;background:#eef2ff;color:var(--azul)}
+  .toggle-detalhe{font-size:12px;color:var(--azul);background:none;padding:4px 0;text-decoration:underline}
+  .detalhe{display:none;margin-top:8px}
+  .detalhe.show{display:block}
+  .apontamento{border:1px solid #e5e7eb;border-radius:8px;padding:10px;margin-bottom:8px;position:relative}
+  .apontamento .del{position:absolute;top:6px;right:6px;background:none;color:var(--vermelho);font-size:16px}
+  .banner{background:#fff7ed;border:1px solid #fdba74;color:#9a3412;padding:8px 12px;border-radius:8px;font-size:13px;margin-bottom:12px}
+  .banner.offline{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+  .rodape{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:10px 12px;box-shadow:0 -2px 8px rgba(0,0,0,.08)}
+  .rodape .max{max-width:640px;margin:0 auto}
+  .oculto{display:none}
+  .foto-preview{max-width:100%;border-radius:8px;margin-top:6px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🥗 Nexus Qualidade — Auditoria de Rotina</h1>
+  <div class="sub" id="statusConexao">verificando conexão…</div>
+</header>
+
+<main>
+
+  <!-- ===== TELA 1: seleção ===== -->
+  <div id="telaSelecao" class="card">
+    <label>Auditor(a)</label>
+    <select id="selAuditor"></select>
+
+    <label>Unidade</label>
+    <select id="selCasa"></select>
+
+    <label>Tipo de visita</label>
+    <select id="selTipoVisita">
+      <option value="rotina">Rotina</option>
+      <option value="geral" disabled>Geral (perguntas ainda não cadastradas)</option>
+    </select>
+
+    <button class="btn-primario" id="btnIniciar" style="margin-top:6px">Iniciar checklist</button>
+  </div>
+
+  <!-- ===== TELA 2: checklist ===== -->
+  <div id="telaChecklist" class="oculto">
+    <div class="card" id="resumoCabecalho"></div>
+    <div id="areasContainer"></div>
+
+    <div class="card">
+      <h3 style="margin-top:0">📋 Apontamentos de validade/etiqueta</h3>
+      <div id="apontamentosContainer"></div>
+      <button class="btn-secundario" id="btnAddApontamento">+ adicionar item fora do padrão</button>
+    </div>
+  </div>
+</main>
+
+<div class="rodape oculto" id="rodapeEnviar">
+  <div class="max">
+    <button class="btn-primario" id="btnEnviar">Finalizar e gerar relatório</button>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — preencher com o projeto Supabase escolhido antes de usar de verdade
+// ============================================================
+const SUPABASE_URL = "https://kuyhkltbwlkvtgbabscv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_dW-JZ00n74dSLCrznBJ6gw_K8AE1VIq";
+const BUCKET_FOTOS = "qualidade-fotos";
+
+const sb = (SUPABASE_URL.startsWith("http"))
+  ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+  : null;
+
+const TIPOS_PROBLEMA = [
+  { v: "vencido", label: "Data vencida" },
+  { v: "sem_etiqueta", label: "Sem etiqueta" },
+  { v: "etiqueta_errada", label: "Etiqueta errada" },
+  { v: "data_errada", label: "Data errada/rasurada" },
+  { v: "sem_etiqueta_descongelamento", label: "Sem etiqueta de descongelamento" },
+];
+
+let DRAFT_KEY = null;
+let draft = null; // { casaId, casaNome, auditorId, auditorNome, templateId, areas:[{id,nome,perguntas:[{id,texto,nota,comentario,fotoDataUrl}]}], apontamentos:[...] }
+
+// ---------- infra offline ----------
+function atualizaStatusConexao(){
+  const el = document.getElementById("statusConexao");
+  if (navigator.onLine) {
+    el.textContent = "online — sincroniza normalmente";
+    el.parentElement.classList.remove("offline-header");
+  } else {
+    el.textContent = "⚠ sem conexão — salvando local, sincroniza sozinho quando voltar";
+  }
+}
+window.addEventListener("online", () => { atualizaStatusConexao(); tentarSincronizarFila(); });
+window.addEventListener("offline", atualizaStatusConexao);
+atualizaStatusConexao();
+
+function salvarDraftLocal(){
+  if (DRAFT_KEY && draft) localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+}
+
+// fila de envios que falharam por falta de conexão (auditoria completa serializada)
+function enfileirarOffline(payload){
+  const fila = JSON.parse(localStorage.getItem("qual_fila_offline") || "[]");
+  fila.push(payload);
+  localStorage.setItem("qual_fila_offline", JSON.stringify(fila));
+}
+async function tentarSincronizarFila(){
+  if (!sb) return;
+  const fila = JSON.parse(localStorage.getItem("qual_fila_offline") || "[]");
+  if (!fila.length) return;
+  const restante = [];
+  for (const payload of fila) {
+    const ok = await enviarAuditoria(payload, /*silencioso*/ true);
+    if (!ok) restante.push(payload);
+  }
+  localStorage.setItem("qual_fila_offline", JSON.stringify(restante));
+  if (restante.length === 0) alert("Fila offline sincronizada — tudo enviado.");
+}
+
+// ---------- carregar dados iniciais ----------
+async function carregarSelects(){
+  if (!sb) { alert("Configure SUPABASE_URL/SUPABASE_ANON_KEY no topo do arquivo antes de usar."); return; }
+  const { data: auditores } = await sb.from("qual_auditores").select("id,nome").eq("ativo", true).order("nome");
+  const { data: casas } = await sb.from("qual_casas").select("id,nome,apelido,tipo").eq("ativo", true).order("nome");
+
+  document.getElementById("selAuditor").innerHTML = (auditores||[]).map(a => `<option value="${a.id}">${a.nome}</option>`).join("");
+  document.getElementById("selCasa").innerHTML = (casas||[]).map(c => `<option value="${c.id}" data-tipo="${c.tipo}">${c.apelido || c.nome}</option>`).join("");
+}
+
+document.getElementById("btnIniciar").addEventListener("click", iniciarChecklist);
+
+async function iniciarChecklist(){
+  const auditorSel = document.getElementById("selAuditor");
+  const casaSel = document.getElementById("selCasa");
+  const tipoVisita = document.getElementById("selTipoVisita").value;
+  const casaTipo = casaSel.selectedOptions[0].dataset.tipo;
+
+  const { data: tpl } = await sb.from("qual_templates").select("id,nome").eq("tipo_visita", tipoVisita).eq("aplica_a", casaTipo).eq("ativo", true).limit(1).maybeSingle();
+  if (!tpl) { alert("Não achei um template pra esse tipo de unidade ainda."); return; }
+
+  const { data: areas } = await sb.from("qual_areas").select("id,nome,ordem,qual_perguntas(id,texto,ordem)").eq("template_id", tpl.id).order("ordem");
+
+  draft = {
+    casaId: casaSel.value,
+    casaNome: casaSel.selectedOptions[0].textContent,
+    auditorId: auditorSel.value,
+    auditorNome: auditorSel.selectedOptions[0].textContent,
+    templateId: tpl.id,
+    dataVisita: new Date().toISOString().slice(0,10),
+    areas: (areas||[]).sort((a,b)=>a.ordem-b.ordem).map(a => ({
+      id: a.id, nome: a.nome,
+      perguntas: (a.qual_perguntas||[]).sort((x,y)=>x.ordem-y.ordem).map(p => ({ id: p.id, texto: p.texto, nota: null, comentario: "", fotoDataUrl: null }))
+    })),
+    apontamentos: []
+  };
+  DRAFT_KEY = "qual_draft_" + draft.casaId + "_" + draft.dataVisita;
+  const existente = localStorage.getItem(DRAFT_KEY);
+  if (existente && confirm("Já existe um rascunho salvo pra essa unidade hoje. Continuar de onde parou?")) {
+    draft = JSON.parse(existente);
+  }
+
+  document.getElementById("telaSelecao").classList.add("oculto");
+  document.getElementById("telaChecklist").classList.remove("oculto");
+  document.getElementById("rodapeEnviar").classList.remove("oculto");
+  renderChecklist();
+}
+
+function renderChecklist(){
+  document.getElementById("resumoCabecalho").innerHTML =
+    `<b>${draft.casaNome}</b><br><span style="color:#666;font-size:13px">${draft.auditorNome} · ${draft.dataVisita}</span>`;
+
+  const cont = document.getElementById("areasContainer");
+  cont.innerHTML = "";
+  draft.areas.forEach((area, ai) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.innerHTML = `
+      <div class="area-titulo">${area.nome}</div>
+      <div class="responder-todas">
+        <button data-area="${ai}" data-v="3">✓ marcar tudo Conforme</button>
+        <button data-area="${ai}" data-v="na">— marcar tudo N/A</button>
+      </div>
+      <div class="perguntas-lista"></div>
+    `;
+    const lista = div.querySelector(".perguntas-lista");
+    area.perguntas.forEach((p, pi) => {
+      const pdiv = document.createElement("div");
+      pdiv.className = "pergunta";
+      pdiv.innerHTML = `
+        <div class="pergunta-texto">${p.texto}</div>
+        <div class="notas">
+          <button class="nota-btn" data-v="1">1 · Ruim</button>
+          <button class="nota-btn" data-v="2">2 · Regular</button>
+          <button class="nota-btn" data-v="3">3 · Ótimo</button>
+          <button class="nota-btn" data-v="na">N/A</button>
+        </div>
+        <button class="toggle-detalhe" type="button">+ foto / comentário</button>
+        <div class="detalhe">
+          <textarea placeholder="Comentário (opcional)" rows="2"></textarea>
+          <input type="file" accept="image/*" capture="environment">
+          <img class="foto-preview oculto">
+        </div>
+      `;
+      pdiv.querySelectorAll(".nota-btn").forEach(btn => {
+        if (btn.dataset.v === p.nota) btn.classList.add("ativo");
+        btn.addEventListener("click", () => {
+          pdiv.querySelectorAll(".nota-btn").forEach(b=>b.classList.remove("ativo"));
+          btn.classList.add("ativo");
+          p.nota = btn.dataset.v;
+          salvarDraftLocal();
+        });
+      });
+      pdiv.querySelector(".toggle-detalhe").addEventListener("click", () => {
+        pdiv.querySelector(".detalhe").classList.toggle("show");
+      });
+      pdiv.querySelector("textarea").addEventListener("input", (e) => { p.comentario = e.target.value; salvarDraftLocal(); });
+      pdiv.querySelector("input[type=file]").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          p.fotoDataUrl = reader.result;
+          const img = pdiv.querySelector(".foto-preview");
+          img.src = reader.result; img.classList.remove("oculto");
+          salvarDraftLocal();
+        };
+        reader.readAsDataURL(file);
+      });
+      lista.appendChild(pdiv);
+    });
+    cont.appendChild(div);
+  });
+
+  // botões "responder todas" por área
+  cont.querySelectorAll(".responder-todas button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const ai = +btn.dataset.area, v = btn.dataset.v;
+      draft.areas[ai].perguntas.forEach(p => p.nota = v);
+      renderChecklist();
+      salvarDraftLocal();
+    });
+  });
+
+  renderApontamentos();
+}
+
+// ---------- apontamentos de validade/etiqueta ----------
+document.getElementById("btnAddApontamento").addEventListener("click", () => {
+  draft.apontamentos.push({ area: draft.areas[0]?.nome || "", tipo_problema: "vencido", produto: "", quantidade: 1, data_ref: "", fotoDataUrl: null });
+  renderApontamentos();
+  salvarDraftLocal();
+});
+
+function renderApontamentos(){
+  const cont = document.getElementById("apontamentosContainer");
+  cont.innerHTML = "";
+  draft.apontamentos.forEach((ap, i) => {
+    const div = document.createElement("div");
+    div.className = "apontamento";
+    div.innerHTML = `
+      <button class="del" data-i="${i}">✕</button>
+      <label>Área</label>
+      <select data-f="area">${draft.areas.map(a=>`<option ${a.nome===ap.area?"selected":""}>${a.nome}</option>`).join("")}</select>
+      <label>Tipo de problema</label>
+      <select data-f="tipo_problema">${TIPOS_PROBLEMA.map(t=>`<option value="${t.v}" ${t.v===ap.tipo_problema?"selected":""}>${t.label}</option>`).join("")}</select>
+      <label>Produto / item</label>
+      <input type="text" data-f="produto" value="${ap.produto}" placeholder="ex: 3 maioneses">
+      <label>Quantidade</label>
+      <input type="number" data-f="quantidade" value="${ap.quantidade}" min="1">
+      <label>Data (se aplicável)</label>
+      <input type="text" data-f="data_ref" value="${ap.data_ref}" placeholder="dd/mm">
+    `;
+    div.querySelectorAll("[data-f]").forEach(el => {
+      el.addEventListener("input", () => { ap[el.dataset.f] = el.value; salvarDraftLocal(); });
+      el.addEventListener("change", () => { ap[el.dataset.f] = el.value; salvarDraftLocal(); });
+    });
+    div.querySelector(".del").addEventListener("click", () => {
+      draft.apontamentos.splice(i,1); renderApontamentos(); salvarDraftLocal();
+    });
+    cont.appendChild(div);
+  });
+}
+
+// ---------- gerar o texto-resumo automático (feature nº1 das melhorias) ----------
+// reproduz o formato que a nutricionista digitava à mão no grupo
+function gerarResumoTexto(){
+  const porArea = {};
+  draft.apontamentos.forEach(ap => {
+    if (!ap.produto) return;
+    porArea[ap.area] = porArea[ap.area] || {};
+    porArea[ap.area][ap.tipo_problema] = porArea[ap.area][ap.tipo_problema] || [];
+    porArea[ap.area][ap.tipo_problema].push(ap);
+  });
+
+  const labelTipo = (v) => ({
+    vencido: "Data vencida", sem_etiqueta: "Sem etiqueta", etiqueta_errada: "Etiqueta errada",
+    data_errada: "Data errada", sem_etiqueta_descongelamento: "Sem etiqueta de descongelamento"
+  }[v] || v);
+
+  let linhas = [`*Sobre datas de validade*`];
+  let total = 0;
+  Object.keys(porArea).forEach(area => {
+    linhas.push(`\n*${area}:*`);
+    Object.keys(porArea[area]).forEach(tipo => {
+      const itens = porArea[area][tipo];
+      const qtd = itens.reduce((s,i)=>s + (+i.quantidade||1), 0);
+      total += qtd;
+      linhas.push(`- ${labelTipo(tipo)}: ${qtd} ${qtd===1?"item":"itens"}`);
+      itens.forEach(i => linhas.push(`${i.quantidade} ${i.produto}${i.data_ref ? " ("+i.data_ref+")" : ""}`));
+    });
+  });
+  if (total === 0) {
+    return `*Não houve pontuação referente a data de validade*\n\nParabéns para toda a equipe! 👏🏽`;
+  }
+  linhas.push(`\n*Total de itens:* ${total}`);
+  return linhas.join("\n");
+}
+
+// ---------- calcular nota ----------
+function calcularNota(){
+  let pontos = 0, contados = 0;
+  draft.areas.forEach(a => a.perguntas.forEach(p => {
+    if (p.nota && p.nota !== "na") { pontos += (+p.nota); contados++; }
+  }));
+  if (contados === 0) return { pct: null, ponderada: null };
+  const pct = Math.round((pontos / (contados*3)) * 10000) / 100; // 0-100%
+  const ponderada = Math.round((pct/20) * 100) / 100;             // escala 0-5, bate com os relatórios reais (80.80% -> 4.04)
+  return { pct, ponderada };
+}
+
+// ---------- envio ----------
+document.getElementById("btnEnviar").addEventListener("click", async () => {
+  const semNota = draft.areas.some(a => a.perguntas.some(p => !p.nota));
+  if (semNota && !confirm("Tem pergunta sem nota. Enviar mesmo assim?")) return;
+
+  const payload = JSON.parse(JSON.stringify(draft));
+  payload.resumoTexto = gerarResumoTexto();
+  const nota = calcularNota();
+  payload.notaPct = nota.pct;
+  payload.notaPonderada = nota.ponderada;
+
+  document.getElementById("btnEnviar").disabled = true;
+  document.getElementById("btnEnviar").textContent = "Enviando…";
+
+  const ok = await enviarAuditoria(payload);
+  if (ok) {
+    localStorage.removeItem(DRAFT_KEY);
+    alert(`Relatório enviado! Nota: ${nota.pct ?? "-"}%\n\nO resumo pro WhatsApp foi gerado e está aguardando aprovação no painel de gestão — ninguém envia sozinho.`);
+    location.reload();
+  } else {
+    enfileirarOffline(payload);
+    alert("Sem conexão agora — o relatório ficou salvo e vai sincronizar sozinho quando a internet voltar. Não feche o app até confirmar.");
+    document.getElementById("btnEnviar").disabled = false;
+    document.getElementById("btnEnviar").textContent = "Finalizar e gerar relatório";
+  }
+});
+
+async function subirFoto(dataUrl, path){
+  if (!dataUrl) return null;
+  const blob = await (await fetch(dataUrl)).blob();
+  const { error } = await sb.storage.from(BUCKET_FOTOS).upload(path, blob, { upsert: true, contentType: blob.type });
+  if (error) { console.error(error); return null; }
+  const { data } = sb.storage.from(BUCKET_FOTOS).getPublicUrl(path);
+  return data.publicUrl;
+}
+
+async function enviarAuditoria(payload, silencioso){
+  if (!sb || !navigator.onLine) return false;
+  try {
+    const { data: auditoria, error: e1 } = await sb.from("qual_auditorias").insert({
+      casa_id: payload.casaId, auditor_id: payload.auditorId, template_id: payload.templateId,
+      status: "enviada", nota_final_pct: payload.notaPct, nota_ponderada: payload.notaPonderada,
+      data_visita: payload.dataVisita, enviada_em: new Date().toISOString()
+    }).select("id").single();
+    if (e1) throw e1;
+
+    for (const area of payload.areas) {
+      for (const p of area.perguntas) {
+        if (!p.nota) continue;
+        let fotoUrl = null;
+        if (p.fotoDataUrl) fotoUrl = await subirFoto(p.fotoDataUrl, `${auditoria.id}/${p.id}.jpg`);
+        await sb.from("qual_respostas").insert({
+          auditoria_id: auditoria.id, pergunta_id: p.id, nota: p.nota, comentario: p.comentario || null, foto_url: fotoUrl
+        });
+      }
+    }
+
+    for (const ap of payload.apontamentos) {
+      if (!ap.produto) continue;
+      let fotoUrl = null;
+      if (ap.fotoDataUrl) fotoUrl = await subirFoto(ap.fotoDataUrl, `${auditoria.id}/apontamento-${Math.random().toString(36).slice(2)}.jpg`);
+      await sb.from("qual_apontamentos").insert({
+        auditoria_id: auditoria.id, area_nome: ap.area, tipo_problema: ap.tipo_problema,
+        produto: ap.produto, quantidade: +ap.quantidade || 1,
+        data_ref: null, foto_url: fotoUrl
+      });
+    }
+
+    // gera a mensagem PRONTA pro WhatsApp — mas NÃO envia. Fica pendente de aprovação no painel.
+    await sb.from("qual_mensagens_pendentes").insert({
+      tipo: "resumo_auditoria", casa_id: payload.casaId, referencia_id: auditoria.id,
+      grupo_destino: "Nutri Botequim", texto: payload.resumoTexto, status: "pendente"
+    });
+
+    return true;
+  } catch (err) {
+    console.error(err);
+    if (!silencioso) console.warn("Falhou o envio, indo pra fila offline.");
+    return false;
+  }
+}
+
+carregarSelects();
+tentarSincronizarFila();
+</script>
+</body>
+</html>

@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nexus Qualidade — Painel</title>
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+  :root{ --azul:#1d4ed8; --verde:#16a34a; --amarelo:#ca8a04; --vermelho:#dc2626; --cinza:#6b7280; --bg:#f4f5f7; }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);margin:0;color:#111}
+  header{background:var(--azul);color:#fff;padding:14px 16px}
+  header h1{font-size:17px;margin:0}
+  nav{display:flex;background:#fff;border-bottom:1px solid #e5e7eb;overflow-x:auto}
+  nav button{flex:0 0 auto;padding:12px 16px;background:none;border:none;font-size:13px;font-weight:600;color:#666;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap}
+  nav button.ativo{color:var(--azul);border-color:var(--azul)}
+  main{padding:14px;max-width:900px;margin:0 auto}
+  .aba{display:none}
+  .aba.show{display:block}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+  .stat{background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .stat .n{font-size:26px;font-weight:800}
+  .stat .l{font-size:12px;color:#666;margin-top:2px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  th,td{padding:9px 10px;text-align:left;font-size:13px;border-bottom:1px solid #f0f0f0}
+  th{background:#f9fafb;color:#555;font-size:11px;text-transform:uppercase}
+  tr:last-child td{border-bottom:none}
+  .badge{display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700}
+  .badge.subiu{background:#dcfce7;color:#166534}
+  .badge.caiu{background:#fee2e2;color:#991b1b}
+  .badge.estavel{background:#f3f4f6;color:#555}
+  .card{background:#fff;border-radius:10px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .msg-texto{white-space:pre-wrap;background:#f9fafb;border-radius:8px;padding:10px;font-size:13px;margin:8px 0}
+  .row-btns{display:flex;gap:8px;flex-wrap:wrap}
+  button.acao{padding:7px 12px;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer}
+  .acao.copiar{background:#eef2ff;color:var(--azul)}
+  .acao.enviada{background:#dcfce7;color:#166534}
+  .acao.descartar{background:#f3f4f6;color:#666}
+  .vazio{color:#888;font-size:13px;padding:10px 0}
+  .pill{font-size:11px;background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:99px;font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>📊 Nexus Qualidade — Painel de Gestão</h1>
+</header>
+
+<nav>
+  <button data-aba="geral" class="ativo">Visão Geral</button>
+  <button data-aba="corretivas">Ações Corretivas & Cobrança</button>
+  <button data-aba="fila">Fila WhatsApp <span id="badgeFila"></span></button>
+  <button data-aba="treinamentos">Treinamentos & Certificados</button>
+</nav>
+
+<main>
+
+  <!-- VISÃO GERAL -->
+  <div class="aba show" id="aba-geral">
+    <div class="grid" id="rankingCards"></div>
+    <div class="card">
+      <h3 style="margin-top:0">🏆 Ranking semanal (semana atual x anterior)</h3>
+      <table id="tabelaRanking"><thead><tr><th>Unidade</th><th>Semana atual</th><th>Semana anterior</th><th>Evolução</th></tr></thead><tbody></tbody></table>
+      <div style="margin-top:10px">
+        <button class="acao copiar" id="btnGerarRanking">Gerar mensagem de ranking pra fila do WhatsApp</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">⚠️ Áreas mais problemáticas (recorrência de apontamentos)</h3>
+      <table id="tabelaAreas"><thead><tr><th>Área</th><th>Total apontamentos</th><th>Auditorias distintas</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">📄 Últimas auditorias</h3>
+      <table id="tabelaAuditorias"><thead><tr><th>Data</th><th>Unidade</th><th>Auditor</th><th>Nota</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+  <!-- AÇÕES CORRETIVAS -->
+  <div class="aba" id="aba-corretivas">
+    <div class="card">
+      <h3 style="margin-top:0">🔴 Apontamentos sem ação corretiva registrada</h3>
+      <p style="font-size:13px;color:#666">Itens fora do padrão há mais de 2 dias sem correção vinculada. Selecione pra gerar uma mensagem de cobrança (vai pra fila, não sai sozinho).</p>
+      <div id="listaApontamentosAbertos"></div>
+    </div>
+  </div>
+
+  <!-- FILA WHATSAPP -->
+  <div class="aba" id="aba-fila">
+    <div class="card">
+      <p style="font-size:13px;color:#666;margin-top:0">
+        Toda mensagem aqui foi <b>gerada pelo sistema</b> mas <b>ainda não foi enviada</b>. Copie o texto e mande manualmente no grupo, depois marque como enviada. Nenhum robô manda essas mensagens sozinho.
+      </p>
+      <div id="listaFilaMensagens"></div>
+    </div>
+  </div>
+
+  <!-- TREINAMENTOS -->
+  <div class="aba" id="aba-treinamentos">
+    <div class="card">
+      <h3 style="margin-top:0">➕ Cadastrar certificado</h3>
+      <label>Funcionário</label>
+      <select id="selFuncCert" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:8px"></select>
+      <label>Curso</label>
+      <input type="text" id="inCertCurso" placeholder="ex: Boas Práticas de Manipulação de Alimentos" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px;margin-bottom:8px">
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <div style="flex:1"><label>Data de emissão</label><input type="date" id="inCertData" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px"></div>
+        <div style="flex:1"><label>Validade (meses)</label><input type="number" id="inCertValidade" value="12" style="width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px"></div>
+      </div>
+      <button class="acao copiar" id="btnSalvarCert">Salvar certificado</button>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🎓 Certificados vencendo (próximos 30 dias)</h3>
+      <table id="tabelaCertVencendo"><thead><tr><th>Funcionário</th><th>Curso</th><th>Emitido</th><th>Vence</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">📜 Todos os certificados</h3>
+      <table id="tabelaCertTodos"><thead><tr><th>Funcionário</th><th>Curso</th><th>Emitido</th><th>Validade</th></tr></thead><tbody></tbody></table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const SUPABASE_URL = "https://kuyhkltbwlkvtgbabscv.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_dW-JZ00n74dSLCrznBJ6gw_K8AE1VIq";
+const sb = (SUPABASE_URL.startsWith("http")) ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+
+// ---- navegação por abas ----
+document.querySelectorAll("nav button").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("ativo"));
+    document.querySelectorAll(".aba").forEach(a=>a.classList.remove("show"));
+    btn.classList.add("ativo");
+    document.getElementById("aba-"+btn.dataset.aba).classList.add("show");
+  });
+});
+
+async function carregarTudo(){
+  if (!sb) { alert("Configure SUPABASE_URL/SUPABASE_ANON_KEY no topo do arquivo."); return; }
+  await Promise.all([carregarRanking(), carregarAreasProblematicas(), carregarAuditorias(), carregarApontamentosAbertos(), carregarFilaMensagens(), carregarCertificados()]);
+}
+
+// ---------- Ranking ----------
+async function carregarRanking(){
+  const { data } = await sb.from("qual_v_ranking_semanal").select("*").order("media_semana_atual", { ascending: false, nullsFirst: false });
+  const cards = document.getElementById("rankingCards");
+  const tbody = document.querySelector("#tabelaRanking tbody");
+  cards.innerHTML = ""; tbody.innerHTML = "";
+  (data||[]).forEach((r, i) => {
+    if (i === 0 && r.media_semana_atual != null) {
+      cards.innerHTML += `<div class="stat"><div class="n">🥇 ${r.casa_nome}</div><div class="l">${r.media_semana_atual?.toFixed(2)}% na semana</div></div>`;
+    }
+    const evo = (r.media_semana_atual != null && r.media_semana_anterior != null) ? (r.media_semana_atual - r.media_semana_anterior) : null;
+    const badge = evo == null ? `<span class="badge estavel">sem dado</span>` : evo > 0.5 ? `<span class="badge subiu">▲ +${evo.toFixed(1)}pp</span>` : evo < -0.5 ? `<span class="badge caiu">▼ ${evo.toFixed(1)}pp</span>` : `<span class="badge estavel">estável</span>`;
+    tbody.innerHTML += `<tr><td>${r.casa_nome}</td><td>${r.media_semana_atual!=null?r.media_semana_atual.toFixed(2)+"%":"-"}</td><td>${r.media_semana_anterior!=null?r.media_semana_anterior.toFixed(2)+"%":"-"}</td><td>${badge}</td></tr>`;
+  });
+  window.__ranking = data || [];
+}
+
+document.getElementById("btnGerarRanking").addEventListener("click", async () => {
+  const r = window.__ranking || [];
+  const validos = r.filter(x => x.media_semana_atual != null).sort((a,b)=>b.media_semana_atual - a.media_semana_atual);
+  if (!validos.length) { alert("Sem dado suficiente essa semana ainda."); return; }
+  let texto = "*🏆 Ranking da semana — Qualidade*\n\n";
+  validos.forEach((v,i) => {
+    const medalha = ["🥇","🥈","🥉"][i] || `${i+1}º`;
+    texto += `${medalha} ${v.casa_nome} — ${v.media_semana_atual.toFixed(2)}%\n`;
+  });
+  const lider = validos[0];
+  texto += `\nParabéns para toda a equipe do ${lider.casa_nome}! 👏🏽`;
+
+  await sb.from("qual_mensagens_pendentes").insert({ tipo: "ranking_semanal", grupo_destino: "Nutri Botequim", texto, status: "pendente" });
+  alert("Mensagem de ranking gerada — foi pra fila do WhatsApp, aba 'Fila WhatsApp'.");
+  carregarFilaMensagens();
+});
+
+// ---------- Áreas problemáticas ----------
+async function carregarAreasProblematicas(){
+  const { data } = await sb.from("qual_v_areas_problematicas").select("*").limit(10);
+  const tbody = document.querySelector("#tabelaAreas tbody");
+  tbody.innerHTML = (data||[]).map(a => `<tr><td>${a.area_nome}</td><td>${a.total_apontamentos}</td><td>${a.auditorias_distintas}</td></tr>`).join("") || `<tr><td colspan=3 class="vazio">Sem dados ainda</td></tr>`;
+}
+
+// ---------- Últimas auditorias ----------
+async function carregarAuditorias(){
+  const { data } = await sb.from("qual_auditorias").select("data_visita,nota_final_pct,qual_casas(nome),qual_auditores(nome)").eq("status","enviada").order("data_visita",{ascending:false}).limit(15);
+  const tbody = document.querySelector("#tabelaAuditorias tbody");
+  tbody.innerHTML = (data||[]).map(a => `<tr><td>${a.data_visita}</td><td>${a.qual_casas?.nome||"-"}</td><td>${a.qual_auditores?.nome||"-"}</td><td>${a.nota_final_pct?.toFixed(2)}%</td></tr>`).join("") || `<tr><td colspan=4 class="vazio">Nenhuma auditoria enviada ainda</td></tr>`;
+}
+
+// ---------- Ações corretivas / cobrança ----------
+async function carregarApontamentosAbertos(){
+  const limite = new Date(); limite.setDate(limite.getDate()-2);
+  const { data } = await sb.from("qual_apontamentos")
+    .select("id,area_nome,tipo_problema,produto,quantidade,criado_em,qual_auditorias(data_visita,qual_casas(nome)),qual_acoes_corretivas(id,status)")
+    .lt("criado_em", limite.toISOString())
+    .order("criado_em");
+
+  const abertos = (data||[]).filter(a => !(a.qual_acoes_corretivas||[]).some(ac => ac.status === "resolvida"));
+  const cont = document.getElementById("listaApontamentosAbertos");
+  cont.innerHTML = "";
+  if (!abertos.length) { cont.innerHTML = `<div class="vazio">Nenhuma pendência com mais de 2 dias 🎉</div>`; return; }
+
+  abertos.forEach(a => {
+    const casa = a.qual_auditorias?.qual_casas?.nome || "-";
+    const div = document.createElement("div");
+    div.className = "card";
+    div.style.marginBottom = "8px";
+    div.innerHTML = `
+      <b>${casa}</b> — ${a.area_nome} <span class="pill">${a.tipo_problema}</span><br>
+      <span style="font-size:13px;color:#444">${a.quantidade}x ${a.produto} · apontado em ${new Date(a.criado_em).toLocaleDateString('pt-BR')}</span>
+      <div class="row-btns" style="margin-top:8px">
+        <button class="acao copiar" data-cobrar="${a.id}" data-casa="${casa}" data-desc="${a.quantidade}x ${a.produto} (${a.area_nome})">Gerar cobrança</button>
+      </div>
+    `;
+    cont.appendChild(div);
+  });
+
+  cont.querySelectorAll("[data-cobrar]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const texto = `*⚠️ Cobrança de pendência — ${btn.dataset.casa}*\n\nO item abaixo foi apontado há mais de 2 dias e ainda não tem correção registrada:\n${btn.dataset.desc}\n\nPor favor confirmar o descarte/correção.`;
+      await sb.from("qual_mensagens_pendentes").insert({ tipo: "cobranca_pendencia", referencia_id: btn.dataset.cobrar, grupo_destino: "Nutri Botequim", texto, status: "pendente" });
+      btn.textContent = "Cobrança gerada ✓";
+      btn.disabled = true;
+      carregarFilaMensagens();
+    });
+  });
+}
+
+// ---------- Fila de mensagens pendentes (staging pro WhatsApp) ----------
+async function carregarFilaMensagens(){
+  const { data } = await sb.from("qual_mensagens_pendentes").select("*").eq("status","pendente").order("criada_em",{ascending:false});
+  const badge = document.getElementById("badgeFila");
+  badge.textContent = data && data.length ? `(${data.length})` : "";
+
+  const cont = document.getElementById("listaFilaMensagens");
+  cont.innerHTML = "";
+  if (!data || !data.length) { cont.innerHTML = `<div class="vazio">Fila vazia — nada esperando envio</div>`; return; }
+
+  data.forEach(m => {
+    const div = document.createElement("div");
+    div.className = "card";
+    div.style.marginBottom = "10px";
+    div.innerHTML = `
+      <b>${m.tipo}</b> <span style="color:#888;font-size:12px">→ ${m.grupo_destino || "-"} · ${new Date(m.criada_em).toLocaleString('pt-BR')}</span>
+      <div class="msg-texto">${m.texto}</div>
+      <div class="row-btns">
+        <button class="acao copiar" data-copiar="${m.id}">📋 Copiar texto</button>
+        <button class="acao enviada" data-marcar="${m.id}">✓ Marcar como enviada</button>
+        <button class="acao descartar" data-descartar="${m.id}">Descartar</button>
+      </div>
+    `;
+    cont.appendChild(div);
+  });
+
+  cont.querySelectorAll("[data-copiar]").forEach(btn => btn.addEventListener("click", async () => {
+    const texto = data.find(m=>m.id===btn.dataset.copiar).texto;
+    await navigator.clipboard.writeText(texto);
+    btn.textContent = "Copiado ✓";
+  }));
+  cont.querySelectorAll("[data-marcar]").forEach(btn => btn.addEventListener("click", async () => {
+    await sb.from("qual_mensagens_pendentes").update({ status: "enviada", aprovado_em: new Date().toISOString() }).eq("id", btn.dataset.marcar);
+    carregarFilaMensagens();
+  }));
+  cont.querySelectorAll("[data-descartar]").forEach(btn => btn.addEventListener("click", async () => {
+    if (!confirm("Descartar essa mensagem?")) return;
+    await sb.from("qual_mensagens_pendentes").update({ status: "descartada" }).eq("id", btn.dataset.descartar);
+    carregarFilaMensagens();
+  }));
+}
+
+// ---------- Treinamentos / certificados ----------
+async function carregarCertificados(){
+  const { data } = await sb.from("qual_certificados").select("curso,data_emissao,validade_meses,qual_funcionarios(nome)").order("data_emissao",{ascending:false});
+  const hoje = new Date();
+  const vencendo = [], todos = [];
+  (data||[]).forEach(c => {
+    const emissao = new Date(c.data_emissao);
+    const vence = new Date(emissao); vence.setMonth(vence.getMonth() + (c.validade_meses||12));
+    const diasRestantes = (vence - hoje) / 86400000;
+    const row = { nome: c.qual_funcionarios?.nome || "-", curso: c.curso, emissao: emissao.toLocaleDateString('pt-BR'), vence: vence.toLocaleDateString('pt-BR'), diasRestantes };
+    todos.push(row);
+    if (diasRestantes <= 30) vencendo.push(row);
+  });
+  document.querySelector("#tabelaCertVencendo tbody").innerHTML = vencendo.map(v => `<tr><td>${v.nome}</td><td>${v.curso}</td><td>${v.emissao}</td><td>${v.vence}</td></tr>`).join("") || `<tr><td colspan=4 class="vazio">Nenhum vencendo em 30 dias</td></tr>`;
+  document.querySelector("#tabelaCertTodos tbody").innerHTML = todos.map(v => `<tr><td>${v.nome}</td><td>${v.curso}</td><td>${v.emissao}</td><td>${v.vence}</td></tr>`).join("") || `<tr><td colspan=4 class="vazio">Nenhum certificado cadastrado ainda</td></tr>`;
+}
+
+async function carregarSelectFuncionarios(){
+  const { data } = await sb.from("qual_funcionarios").select("id,nome,qual_casas(apelido)").eq("ativo", true).order("nome");
+  document.getElementById("selFuncCert").innerHTML = (data||[]).map(f => `<option value="${f.id}">${f.nome}${f.qual_casas?.apelido ? " — "+f.qual_casas.apelido : ""}</option>`).join("") || `<option disabled>Nenhum funcionário cadastrado (cadastre em qual_funcionarios via SQL por enquanto)</option>`;
+}
+
+document.getElementById("btnSalvarCert").addEventListener("click", async () => {
+  const funcId = document.getElementById("selFuncCert").value;
+  const curso = document.getElementById("inCertCurso").value.trim();
+  const data = document.getElementById("inCertData").value;
+  const validade = +document.getElementById("inCertValidade").value || 12;
+  if (!funcId || !curso || !data) { alert("Preenche funcionário, curso e data de emissão."); return; }
+  await sb.from("qual_certificados").insert({ funcionario_id: funcId, curso, data_emissao: data, validade_meses: validade });
+  document.getElementById("inCertCurso").value = "";
+  alert("Certificado salvo.");
+  carregarCertificados();
+});
+
+carregarSelectFuncionarios();
+carregarTudo();
+</script>
+</body>
+</html>
