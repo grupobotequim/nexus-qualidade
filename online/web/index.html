@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f766e">
+<title>Qualidade Botequim</title>
+<style>
+:root{--bg:#f4f6f5;--card:#fff;--ink:#16211d;--ink2:#5b6b64;--ink3:#93a19a;--bord:#dfe5e2;--ac:#0f766e;--ac2:#e6f4f1;
+--verde:#16a34a;--verde-bg:#e8f7ee;--amar:#d97706;--amar-bg:#fdf3e1;--verm:#dc2626;--verm-bg:#fdecec;--na:#64748b;--na-bg:#eef1f4;--raio:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 'Segoe UI',system-ui,-apple-system,sans-serif;font-variant-numeric:tabular-nums;padding-bottom:90px}
+button,select,input,textarea{font:inherit;color:var(--ink);background:#fff;border:1px solid var(--bord);border-radius:10px;padding:9px 12px}
+button{cursor:pointer;font-weight:600}button:active{transform:scale(.98)}
+button.pri{background:var(--ac);border-color:var(--ac);color:#fff}
+button.sec{background:var(--ac2);border-color:#bfe3dc;color:var(--ac)}
+button.perigo{color:var(--verm);border-color:#f3c4c4;background:#fff}
+button.mini{padding:5px 10px;font-size:13px}
+button:disabled{opacity:.5}
+input,select,textarea{width:100%}
+label{display:block;font-size:13px;color:var(--ink2);margin:10px 0 4px;font-weight:600}
+header{background:var(--ac);color:#fff;padding:14px 16px 0;position:sticky;top:0;z-index:5}
+header h1{font-size:18px;font-weight:700;display:flex;align-items:center;gap:8px}
+header h1 small{font-weight:400;opacity:.8;font-size:13px}
+nav{display:flex;gap:2px;overflow-x:auto;margin:10px -16px 0;padding:0 12px;scrollbar-width:none}
+nav::-webkit-scrollbar{display:none}
+nav button{background:none;border:0;color:#d5efea;border-radius:0;padding:10px 10px 11px;white-space:nowrap;border-bottom:3px solid transparent;font-size:14px}
+nav button.on{color:#fff;border-bottom-color:#fff}
+main{max-width:980px;margin:0 auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--bord);border-radius:var(--raio);padding:16px;margin-bottom:12px}
+.card h2{font-size:16px;margin-bottom:4px}
+.sub{color:var(--ink2);font-size:13px}
+.passo{font-size:12px;font-weight:700;color:var(--ac);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.opcoes{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px}
+.opcao{text-align:left;padding:12px;border-radius:12px;border:2px solid var(--bord);background:#fff;font-weight:600}
+.opcao small{display:block;font-weight:400;color:var(--ink2);font-size:12px;margin-top:2px}
+.opcao.sel{border-color:var(--ac);background:var(--ac2)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1;min-width:140px}
+.area{background:var(--card);border:1px solid var(--bord);border-radius:var(--raio);margin-bottom:10px;overflow:hidden}
+.area>summary{list-style:none;padding:13px 16px;font-weight:700;display:flex;align-items:center;gap:8px;cursor:pointer}
+.area>summary::-webkit-details-marker{display:none}
+.area>summary .cont{margin-left:auto;font-weight:500;font-size:13px;color:var(--ink2)}
+.q{padding:12px 16px;border-top:1px solid var(--bord)}
+.q .txt{font-size:14.5px;margin-bottom:8px}
+.q .peso{font-size:11.5px;color:var(--ink3);font-weight:600;margin-left:4px;white-space:nowrap}
+.faces{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.faces button{padding:8px 2px;font-size:13px;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:600;color:var(--ink2)}
+.faces button .e{font-size:24px;line-height:1}
+.faces button.verde.on{border-color:var(--verde);background:var(--verde-bg);color:var(--verde)}
+.faces button.amarela.on{border-color:var(--amar);background:var(--amar-bg);color:var(--amar)}
+.faces button.vermelha.on{border-color:var(--verm);background:var(--verm-bg);color:var(--verm)}
+.faces button.na.on{border-color:var(--na);background:var(--na-bg);color:var(--na)}
+.extra{margin-top:8px;display:none}
+.q.prob .extra{display:block}
+.fotos{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.fotos img{width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--bord)}
+.fotos .x{position:relative}.fotos .x b{position:absolute;top:-6px;right:-6px;background:var(--verm);color:#fff;border-radius:50%;width:20px;height:20px;font-size:12px;display:grid;place-items:center;cursor:pointer}
+.barra{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--bord);padding:10px 16px calc(10px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;z-index:6;box-shadow:0 -4px 16px rgba(0,0,0,.05)}
+.barra .nota{font-size:22px;font-weight:800}
+.prog{height:6px;background:#e5ebe8;border-radius:3px;overflow:hidden;margin-top:3px;width:120px}.prog i{display:block;height:100%;background:var(--ac)}
+.big{font-size:44px;font-weight:800;line-height:1}
+.cor-v{color:var(--verde)}.cor-a{color:var(--amar)}.cor-r{color:var(--verm)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font-size:12px;color:var(--ink2);padding:8px;border-bottom:1px solid var(--bord);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid var(--bord);vertical-align:top}
+.tw{overflow-x:auto}
+.chip{display:inline-block;border-radius:99px;padding:2px 9px;font-size:12px;font-weight:700;white-space:nowrap}
+.chip.v{background:var(--verde-bg);color:var(--verde)}.chip.a{background:var(--amar-bg);color:var(--amar)}.chip.r{background:var(--verm-bg);color:var(--verm)}.chip.n{background:var(--na-bg);color:var(--na)}
+.chip.demo{background:#ede9fe;color:#6d28d9}
+.nota-cel{font-size:20px;font-weight:800}
+.delta{font-size:12px;font-weight:700}
+.vazio{color:var(--ink2);text-align:center;padding:30px 10px}
+.toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%);background:#16211d;color:#fff;padding:10px 16px;border-radius:10px;z-index:20;font-size:14px;max-width:90vw}
+.modal{position:fixed;inset:0;background:rgba(10,20,16,.45);z-index:15;display:flex;align-items:flex-end;justify-content:center}
+.modal .box{background:#fff;width:100%;max-width:560px;max-height:92vh;overflow:auto;border-radius:18px 18px 0 0;padding:18px}
+@media(min-width:700px){.modal{align-items:center}.modal .box{border-radius:18px}}
+canvas.assin{width:100%;height:150px;border:2px dashed var(--bord);border-radius:12px;background:#fafcfb;touch-action:none}
+.kpis{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.kpi{background:#fff;border:1px solid var(--bord);border-radius:12px;padding:10px 12px}.kpi b{display:block;font-size:22px}.kpi span{font-size:12px;color:var(--ink2)}
+.ed-q{display:grid;grid-template-columns:1fr 70px 34px;gap:6px;align-items:center;padding:6px 0;border-bottom:1px solid var(--bord)}
+.ed-q input{padding:7px 9px}
+.aviso{background:var(--amar-bg);border:1px solid #f3d9a8;color:#7a4a05;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:12px}
+
+#login{position:fixed;inset:0;z-index:40;background:#0f766e;display:grid;place-items:center}
+#login form{background:#fff;border-radius:18px;padding:26px 22px;width:min(340px,90vw);text-align:center}
+#login h1{font-size:20px;margin:0 0 4px}#login p{color:#5b6b64;font-size:14px;margin:0 0 16px}
+#login input{font-size:26px;letter-spacing:.3em;text-align:center;padding:12px;border:2px solid #dfe5e2;border-radius:12px}
+#login button{margin-top:14px;width:100%;padding:14px}#login .e{color:#dc2626;font-size:14px;margin-top:10px;min-height:18px}
+#caneta{position:fixed;inset:0;z-index:30;background:#0b1210;display:flex;flex-direction:column;padding:10px 10px calc(10px + env(safe-area-inset-bottom));gap:8px;color:#fff}
+#caneta .ct-topo{display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
+#caneta .ct-area{flex:1;min-height:0;display:flex;align-items:center;justify-content:center}
+#caneta canvas{touch-action:none;border-radius:8px;background:#000;max-width:100%;max-height:100%}
+#caneta .ct-bar{display:flex;gap:8px;align-items:center}#caneta .ct-bar button{flex:1;padding:12px}
+#caneta .ct-cores{display:flex;gap:8px;margin-right:4px}#caneta .ct-cor{width:38px;height:38px;flex:0 0 38px;border-radius:50%;padding:0;border:3px solid #0b1210;box-shadow:0 0 0 2px #556}
+#caneta .ct-cor.on{box-shadow:0 0 0 3px #fff}
+</style>
+</head>
+<body>
+<header>
+  <h1>📋 Qualidade <small>Grupo Botequim</small><button onclick="sair()" style="margin-left:auto;background:none;border:0;color:#d5efea;font-size:13px;padding:4px">sair</button></h1>
+  <nav id="nav"></nav>
+</header>
+<main id="main"><div class="vazio">carregando…</div></main>
+<div id="barra"></div>
+<div id="modal"></div>
+<script>
+const $ = (s) => document.querySelector(s)
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+const br = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) + '/' + iso.slice(0, 4) : '—'
+const brc = (iso) => iso ? iso.slice(8, 10) + '/' + iso.slice(5, 7) : '—'
+const f2 = (n) => n == null ? '—' : Number(n).toFixed(2).replace('.', ',')
+const hoje = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10)
+const corN = (n) => n == null ? '' : n < 85 ? 'cor-r' : n < 92 ? 'cor-a' : 'cor-v'
+const LS = { get(k, d) { try { return localStorage.getItem(k) ?? d } catch { return d } }, set(k, v) { try { localStorage.setItem(k, v) } catch {} } }
+const FN = 'https://kuyhkltbwlkvtgbabscv.supabase.co/functions/v1/qualidade'
+let SESS = LS.get('qual_sessao', '')
+const rotaFn = (url) => url.replace(/^\/api\/qualidade/, FN).replace(/^\/api\/pessoas/, FN + '/pessoas')
+const fotoUrl = (f) => `${FN}/foto/${encodeURIComponent(f)}?s=${SESS}`
+async function api(url, body) {
+  const o = { headers: { 'x-sessao': SESS } }
+  if (body !== undefined) { o.method = 'POST'; o.headers['Content-Type'] = 'application/json'; o.body = JSON.stringify(body) }
+  let r
+  try { r = await fetch(rotaFn(url), o) } catch { throw new Error('sem internet — tente de novo') }
+  const j = await r.json().catch(() => ({}))
+  if (r.status === 401) { telaLogin(j.erro); throw new Error(j.erro || 'entre com o código de acesso') }
+  if (!r.ok || j.erro) throw new Error(j.erro || 'HTTP ' + r.status)
+  return j
+}
+// ======================================================= CÓDIGO DE ACESSO
+function telaLogin(msg) {
+  if ($('#login')) { $('#login-e').textContent = msg || ''; return }
+  const d = document.createElement('div'); d.id = 'login'
+  d.innerHTML = `<form onsubmit="entrar(event)"><h1>📋 Qualidade</h1><p>Grupo Botequim — digite o código de acesso</p>
+    <input id="login-c" inputmode="numeric" autocomplete="one-time-code" maxlength="12" autofocus><button class="pri">Entrar</button><div class="e" id="login-e">${esc(msg && !/entre com/.test(msg) ? msg : '')}</div></form>`
+  document.body.appendChild(d); setTimeout(() => $('#login-c') && $('#login-c').focus(), 50)
+}
+async function entrar(ev) {
+  ev.preventDefault()
+  const b = ev.target.querySelector('button'); b.disabled = true
+  try {
+    const r = await fetch(FN + '/entrar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: $('#login-c').value.trim() }) })
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok || !j.sessao) throw new Error(j.erro || 'não deu certo')
+    SESS = j.sessao; LS.set('qual_sessao', SESS); $('#login').remove(); iniciarApp()
+  } catch (e) { $('#login-e').textContent = e.message; b.disabled = false }
+}
+function sair() { if (!confirm('Sair deste aparelho?')) return; LS.set('qual_sessao', ''); SESS = ''; location.reload() }
+function toast(m, ms) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 2600) }
+function modal(html) { $('#modal').innerHTML = html ? `<div class="modal" onclick="if(event.target===this)modal('')"><div class="box">${html}</div></div>` : '' }
+const FACES = [['verde', '🟢', 'Conforme'], ['amarela', '🟡', 'Parcial'], ['vermelha', '🔴', 'Não conf.'], ['na', '⚪', 'N/A']]
+const chipResp = (r) => r === 'verde' ? '<span class="chip v">🟢 Conforme</span>' : r === 'amarela' ? '<span class="chip a">🟡 Parcial</span>' : r === 'vermelha' ? '<span class="chip r">🔴 Não conforme</span>' : r === 'na' ? '<span class="chip n">N/A</span>' : '<span class="chip n">—</span>'
+
+let CASAS = [], MODELOS = []
+const nomeCasa = (id) => { const c = CASAS.find((x) => x.id === id); return c ? c.nome + (c.apelido && c.tipo === 'loja' ? ' · ' + c.apelido : '') : id }
+const ABAS = [['preencher', '✍️ Preencher'], ['relatorios', '📄 Relatórios'], ['comparativo', '📊 Comparativo'], ['epi', '🦺 Uniforme e EPI'], ['modelos', '🧩 Modelos'], ['casas', '🏠 Restaurantes']]
+let ABA = new URLSearchParams(location.search).get('aba') || 'preencher'
+function nav() { $('#nav').innerHTML = ABAS.map(([id, r]) => `<button class="${id === ABA ? 'on' : ''}" onclick="ir('${id}')">${r}</button>`).join('') }
+function ir(id, arg) { ABA = id; nav(); $('#barra').innerHTML = ''; window.scrollTo(0, 0); ({ preencher: telaInicio, relatorios: telaRelatorios, comparativo: telaComparativo, epi: telaEpi, modelos: telaModelos, casas: telaCasas, painel: telaPainel })[id](arg) }
+async function carregarBase() { [CASAS, MODELOS] = await Promise.all([api('/api/qualidade/casas'), api('/api/qualidade/modelos')]) }
+
+// ======================================================= PREENCHER
+let SEL = { casa: null, modelo: null }
+function telaInicio() {
+  const casas = CASAS.filter((c) => c.ativo)
+  const casa = casas.find((c) => c.id === SEL.casa)
+  const modelos = MODELOS.filter((m) => !casa || m.para === 'todas' || m.para === casa.tipo)
+  if (SEL.modelo && !modelos.some((m) => m.id === SEL.modelo)) SEL.modelo = null
+  $('#main').innerHTML = `
+  <div class="card"><div class="passo">Passo 1</div><h2>Escolha o restaurante</h2>
+    <div class="opcoes">${casas.map((c) => `<button class="opcao ${c.id === SEL.casa ? 'sel' : ''}" onclick="SEL.casa='${c.id}';telaInicio()">${esc(c.nome)}<small>${esc(c.apelido || '')}${c.email ? ' · ✉️' : ''}</small></button>`).join('')}</div></div>
+  <div class="card" style="${SEL.casa ? '' : 'opacity:.5;pointer-events:none'}"><div class="passo">Passo 2</div><h2>Escolha o relatório</h2>
+    <div class="opcoes">${modelos.map((m) => `<button class="opcao ${m.id === SEL.modelo ? 'sel' : ''}" onclick="SEL.modelo=${m.id};telaInicio()">${esc(m.nome)}<small>${m.n_perguntas} perguntas</small></button>`).join('') || '<div class="sub">nenhum modelo para esse tipo de casa — crie em 🧩 Modelos</div>'}</div></div>
+  <div class="card" style="${SEL.modelo ? '' : 'opacity:.5;pointer-events:none'}"><div class="passo">Passo 3</div><h2>Dados da visita</h2>
+    <div class="row"><div><label>Nutricionista</label><input id="i-nutri" value="${esc(LS.get('qual_nutri', 'Kátia'))}"></div><div><label>Data</label><input id="i-data" type="date" value="${hoje()}"></div></div>
+    <label>Quem acompanhou na casa (opcional)</label><input id="i-acomp" placeholder="ex.: gerente de plantão">
+    <label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="i-demo" style="width:auto" checked> Relatório de teste (DEMO — não entra no ranking oficial)</label>
+    <div style="margin-top:14px"><button class="pri" style="width:100%;padding:14px" onclick="comecar()">Começar o relatório →</button></div></div>
+  <div id="rasc"></div>`
+  api('/api/qualidade/relatorios?status=rascunho').then((rs) => { if (rs.length) $('#rasc').innerHTML = `<div class="card"><h2>Continuar rascunho</h2>${rs.map((r) => `<div class="row" style="margin-top:8px"><div>${esc(nomeCasa(r.casa_id))} — ${esc(r.modelo_nome)}<div class="sub">${br(r.data)} · ${esc(r.nutri)} ${r.demo ? '<span class="chip demo">DEMO</span>' : ''}</div></div><button class="sec" style="flex:0" onclick="abrir('${r.codigo}')">Continuar</button></div>`).join('')}</div>` }).catch(() => {})
+}
+async function comecar() {
+  try {
+    LS.set('qual_nutri', $('#i-nutri').value)
+    const r = await api('/api/qualidade/relatorios', { casa_id: SEL.casa, modelo_id: SEL.modelo, nutri: $('#i-nutri').value, data: $('#i-data').value, acompanhou: $('#i-acomp').value, demo: $('#i-demo').checked })
+    abrir(r.codigo)
+  } catch (e) { toast('⚠️ ' + e.message) }
+}
+
+let REL = null, salvarT = null
+async function abrir(codigo) {
+  ABA = 'preencher'; nav()
+  REL = await api('/api/qualidade/relatorios/' + codigo)
+  if (REL.status === 'finalizado') return telaFim()
+  history.replaceState(null, '', '?aba=preencher#r=' + codigo)
+  const itens = REL.areas.flatMap((a) => a.itens)
+  $('#main').innerHTML = `
+  <div class="card"><div class="row"><div><h2>${esc(nomeCasa(REL.casa_id))} — ${esc(REL.modelo_nome)} ${REL.demo ? '<span class="chip demo">DEMO</span>' : ''}</h2><div class="sub">${br(REL.data)} · ${esc(REL.nutri)} · toque na carinha de cada pergunta. Tudo salva sozinho.</div></div>
+  <button class="mini sec" style="flex:0" onclick="marcarTudoVerde()">🟢 Marcar o resto como conforme</button></div></div>
+  ${REL.areas.map((a, ai) => `<details class="area" ${ai === 0 ? 'open' : ''}><summary>${esc(a.area)}<span class="cont" id="ac-${ai}"></span></summary>
+    ${a.itens.map((q) => `<div class="q" id="q-${q.id}"><div class="txt">${esc(q.pergunta)}<span class="peso">peso ${String(q.peso).replace('.', ',')}</span></div>
+      <div class="faces">${FACES.map(([k, e, t]) => `<button class="${k}" onclick="resp(${q.id},'${k}')"><span class="e">${e}</span>${t}</button>`).join('')}</div>
+      <div class="extra"><textarea rows="2" placeholder="O que viu? (ex.: 2 potes de molho sem etiqueta na câmara)" oninput="coment(${q.id},this.value)"></textarea>
+        <div class="row" style="margin-top:6px"><label class="mini sec" style="flex:0;margin:0;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">📷 Foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="foto(${q.id},this)"></label><div class="fotos" id="f-${q.id}"></div></div></div></div>`).join('')}
+  </details>`).join('')}
+  <div class="card"><h2>Observações gerais</h2><textarea id="i-obs" rows="3" oninput="REL.obs=this.value;agendarSalvar()" placeholder="Resumo da visita, orientações dadas, treinamento aplicado…">${esc(REL.obs || '')}</textarea></div>
+  <div class="row"><button class="perigo" onclick="apagarRel('${REL.codigo}')">Apagar este relatório</button></div>`
+  for (const q of itens) pintar(q)
+  barra()
+}
+const ITEM = (id) => REL.areas.flatMap((a) => a.itens).find((q) => q.id === id)
+function pintar(q) {
+  const el = $('#q-' + q.id); if (!el) return
+  el.querySelectorAll('.faces button').forEach((b) => b.classList.toggle('on', b.classList.contains(q.resposta)))
+  el.classList.toggle('prob', q.resposta === 'amarela' || q.resposta === 'vermelha' || !!q.comentario || (q.fotos || []).length > 0)
+  const ta = el.querySelector('textarea'); if (ta && document.activeElement !== ta) ta.value = q.comentario || ''
+  $('#f-' + q.id).innerHTML = (q.fotos || []).map((f) => `<span class="x"><img src="${fotoUrl(f)}" onclick="window.open(this.src)"><b onclick="tirarFoto(${q.id},'${f}')">×</b></span>`).join('')
+}
+function resp(id, k) { const q = ITEM(id); q.resposta = q.resposta === k ? null : k; pintar(q); agendarSalvar(); barra() }
+function coment(id, v) { ITEM(id).comentario = v; agendarSalvar() }
+function tirarFoto(id, f) { const q = ITEM(id); q.fotos = q.fotos.filter((x) => x !== f); pintar(q); agendarSalvar() }
+function marcarTudoVerde() { for (const q of REL.areas.flatMap((a) => a.itens)) if (!q.resposta) { q.resposta = 'verde'; pintar(q) } agendarSalvar(); barra() }
+async function foto(id, input) {
+  const file = input.files[0]; if (!file) return
+  try {
+    const img = await new Promise((ok, er) => { const i = new Image(); i.onload = () => ok(i); i.onerror = er; i.src = URL.createObjectURL(file) })
+    const s = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas')
+    c.width = Math.round(img.width * s); c.height = Math.round(img.height * s); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height)
+    const orig = c.toDataURL('image/jpeg', 0.8)
+    input.value = ''
+    const m = await caneta(orig); if (!m) return
+    toast('📷 enviando a foto…')
+    const r = await api('/api/qualidade/foto', m.marcou ? { imagem: m.url, original: orig } : { imagem: orig })
+    const q = ITEM(id); q.fotos = [...(q.fotos || []), r.arquivo]; pintar(q); agendarSalvar(); toast(m.marcou ? '📷 foto marcada anexada' : '📷 foto anexada')
+  } catch (e) { toast('⚠️ foto: ' + e.message) }
+  input.value = ''
+}
+function calc() {
+  let p = 0, t = 0, resp = 0, n = 0
+  for (const q of REL.areas.flatMap((a) => a.itens)) { n++; if (q.resposta) resp++; if (!q.resposta || q.resposta === 'na') continue; t += q.peso; p += q.peso * ({ verde: 1, amarela: 0.5, vermelha: 0 })[q.resposta] }
+  return { nota: t ? Math.round((p / t) * 10000) / 100 : null, resp, n }
+}
+function barra() {
+  const c = calc()
+  REL.areas.forEach((a, ai) => { const r = a.itens.filter((q) => q.resposta).length, ruins = a.itens.filter((q) => q.resposta === 'vermelha' || q.resposta === 'amarela').length; const el = $('#ac-' + ai); if (el) el.innerHTML = `${ruins ? `<span class="chip r">${ruins}</span> ` : ''}${r}/${a.itens.length}` })
+  $('#barra').innerHTML = `<div class="barra"><div><div class="sub">Nota parcial</div><div class="nota ${corN(c.nota)}">${f2(c.nota)}${c.nota != null ? '%' : ''}</div></div>
+    <div style="flex:1"><div class="sub">${c.resp} de ${c.n} respondidas</div><div class="prog"><i style="width:${(c.resp / c.n) * 100}%"></i></div></div>
+    <button class="pri" onclick="finalizar()">Finalizar ✓</button></div>`
+}
+function agendarSalvar() { clearTimeout(salvarT); salvarT = setTimeout(salvar, 600) }
+async function salvar() {
+  clearTimeout(salvarT)
+  try { await api(`/api/qualidade/relatorios/${REL.codigo}/salvar`, { obs: REL.obs, respostas: REL.areas.flatMap((a) => a.itens).map((q) => ({ id: q.id, resposta: q.resposta, comentario: q.comentario, fotos: q.fotos })) }) }
+  catch (e) { toast('⚠️ não salvou: ' + e.message) }
+}
+async function finalizar() {
+  const c = calc()
+  if (c.resp < c.n && !confirm(`Faltam ${c.n - c.resp} perguntas sem resposta — elas ficam fora da nota. Finalizar mesmo assim?`)) return
+  await salvar()
+  $('#barra').innerHTML = '<div class="barra"><div class="sub">Finalizando…</div></div>'
+  try { await api(`/api/qualidade/relatorios/${REL.codigo}/finalizar`, {}); REL = await api('/api/qualidade/relatorios/' + REL.codigo); telaFim() }
+  catch (e) { toast('⚠️ ' + e.message); barra() }
+}
+async function apagarRel(cod) { if (!confirm('Apagar este relatório? Não tem volta.')) return; await api(`/api/qualidade/relatorios/${cod}/apagar`, {}); toast('apagado'); history.replaceState(null, '', '?aba=relatorios'); ir('relatorios') }
+function telaFim() {
+  $('#barra').innerHTML = ''
+  history.replaceState(null, '', '?aba=preencher#r=' + REL.codigo)
+  const c = REL.calc
+  $('#main').innerHTML = `
+  <div class="card" style="text-align:center"><div class="sub">${esc(nomeCasa(REL.casa_id))} — ${esc(REL.modelo_nome)} · ${br(REL.data)} ${REL.demo ? '<span class="chip demo">DEMO</span>' : ''}</div>
+    <div class="big ${corN(c.nota)}" style="margin:10px 0 4px">${f2(c.nota)}%</div><div class="sub">nota ponderada pelo peso das perguntas · N/A fora da conta</div>
+    <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap"><span class="chip v">🟢 ${c.verde}</span><span class="chip a">🟡 ${c.amarela}</span><span class="chip r">🔴 ${c.vermelha}</span><span class="chip n">N/A ${c.na}</span>${c.sem ? `<span class="chip n">sem resposta ${c.sem}</span>` : ''}</div>
+    ${!REL.demo ? '<div class="sub" style="margin-top:8px">✔ entrou no ranking e nas pendências da casa</div>' : '<div class="sub" style="margin-top:8px">DEMO — não entra no ranking oficial</div>'}</div>
+  <div class="card"><h2>Enviar / guardar</h2>
+    <div class="row" style="margin-top:8px"><button class="pri" onclick="window.open('relatorio.html#${REL.codigo}')">📄 Ver PDF</button><button class="sec" onclick="window.open('relatorio.html?baixar=1#${REL.codigo}')">⬇️ Baixar PDF</button></div>
+    <div class="row" style="margin-top:8px"><button class="sec" onclick="email('${REL.codigo}')">✉️ E-mail para ${esc(REL.casa?.email || '(cadastrar e-mail da casa)')}</button></div></div>
+  ${REL.ncs.length ? `<div class="card"><h2>Pontos de atenção (${REL.ncs.length})</h2>${REL.ncs.map((x) => `<div style="padding:8px 0;border-bottom:1px solid var(--bord)">${chipResp(x.resposta)} <b>${esc(x.area)}</b> — ${esc(x.pergunta)}${x.comentario ? `<div class="sub">${esc(x.comentario)}</div>` : ''}${(x.fotos || []).length ? `<div class="fotos">${x.fotos.map((f) => `<img src="${fotoUrl(f)}">`).join('')}</div>` : ''}</div>`).join('')}</div>` : ''}
+  <div class="row"><button onclick="SEL={casa:null,modelo:null};history.replaceState(null,'','?aba=preencher');ir('preencher')">✍️ Novo relatório</button><button onclick="reabrir('${REL.codigo}')">✏️ Reabrir para corrigir</button></div>`
+}
+async function reabrir(cod) { await api(`/api/qualidade/relatorios/${cod}/reabrir`, {}); abrir(cod) }
+async function email(cod) {
+  const e = await api(`/api/qualidade/relatorios/${cod}/email`)
+  modal(`<h2>✉️ E-mail pronto</h2><div class="sub" style="margin:4px 0 10px">O sistema <b>não envia sozinho</b>. Baixe o PDF, clique em "Abrir no e-mail" e anexe o PDF.</div>
+    <label>Para</label><input id="m-para" value="${esc(e.para)}" placeholder="e-mail da casa (cadastre em 🏠 Restaurantes)">
+    <label>Assunto</label><input id="m-ass" value="${esc(e.assunto)}"><label>Texto</label><textarea id="m-corpo" rows="9">${esc(e.corpo)}</textarea>
+    <div class="row" style="margin-top:12px"><button class="sec" onclick="window.open('relatorio.html?baixar=1#${cod}')">⬇️ 1. Baixar PDF</button>
+    <button class="pri" onclick="location.href='mailto:'+encodeURIComponent($('#m-para').value)+'?subject='+encodeURIComponent($('#m-ass').value)+'&body='+encodeURIComponent($('#m-corpo').value)">✉️ 2. Abrir no e-mail</button></div>
+    <div class="sub" style="margin-top:10px">${esc(e.falta)}</div><div style="margin-top:12px"><button onclick="modal('')">Fechar</button></div>`)
+}
+
+// ======================================================= RELATÓRIOS
+async function telaRelatorios() {
+  const rs = await api('/api/qualidade/relatorios')
+  $('#main').innerHTML = `<div class="card"><div class="row"><div><h2>Relatórios feitos aqui</h2><div class="sub">Os relatórios antigos do app de terceiro ficam na Secretaria (contam no comparativo).</div></div>
+    ${rs.some((r) => r.demo) ? `<button class="perigo mini" style="flex:0" onclick="apagarDemo()">🗑️ Apagar todos os DEMO</button>` : ''}</div></div>
+  <div class="card tw">${rs.length ? `<table><tr><th>Data</th><th>Casa</th><th>Relatório</th><th>Nota</th><th>🟢🟡🔴</th><th></th></tr>${rs.map((r) => `<tr><td>${brc(r.data)}</td><td>${esc(nomeCasa(r.casa_id))}</td><td>${esc(r.modelo_nome)} ${r.demo ? '<span class="chip demo">DEMO</span>' : ''}${r.status === 'rascunho' ? ' <span class="chip n">rascunho</span>' : ''}</td>
+    <td class="${corN(r.nota)}"><b>${r.nota != null ? f2(r.nota) + '%' : '—'}</b></td><td class="sub">${r.status === 'finalizado' ? `${r.n_verde}·${r.n_amarela}·${r.n_vermelha}` : ''}</td>
+    <td style="white-space:nowrap"><button class="mini sec" onclick="abrir('${r.codigo}')">${r.status === 'rascunho' ? 'Continuar' : 'Abrir'}</button> ${r.status === 'finalizado' ? `<button class="mini" onclick="window.open('relatorio.html#${r.codigo}')">PDF</button>` : ''}</td></tr>`).join('')}</table>` : '<div class="vazio">nenhum relatório ainda — comece em ✍️ Preencher</div>'}</div>`
+}
+async function apagarDemo() { if (!confirm('Apagar TODOS os relatórios e entregas marcados como DEMO?')) return; const r = await api('/api/qualidade/demo/apagar', {}); toast(`apagados: ${r.relatorios} relatórios, ${r.entregas_epi} entregas`); ir(ABA) }
+
+// ======================================================= COMPARATIVO
+let SEMANA = null
+async function telaComparativo(sem) {
+  if (sem) SEMANA = sem
+  const d = await api('/api/qualidade/comparativo' + (SEMANA ? '?semana=' + SEMANA : ''))
+  const ant = (n) => { const x = new Date(d.semana.de + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n * 7); return x.toISOString().slice(0, 10) }
+  const dl = (v) => v == null ? '<span class="sub">—</span>' : `<span class="delta ${v >= 0 ? 'cor-v' : 'cor-r'}">${v >= 0 ? '▲' : '▼'} ${f2(Math.abs(v))}</span>`
+  const linhas = [...d.linhas].sort((a, b) => (a.pos || 99) - (b.pos || 99))
+  const max = Math.max(...d.piores.map((p) => p.vezes), 1)
+  $('#main').innerHTML = `
+  <div class="card"><div class="row"><button class="mini" style="flex:0" onclick="telaComparativo('${ant(-1)}')">◀</button>
+    <div style="text-align:center"><h2>Semana ${brc(d.semana.de)} a ${br(d.semana.ate)}</h2><div class="sub">comparada com ${brc(d.anterior.de)} a ${brc(d.anterior.ate)} · média dos relatórios da semana</div></div>
+    <button class="mini" style="flex:0" onclick="telaComparativo('${ant(1)}')">▶</button></div>
+    ${d.tem_demo ? '<div class="sub" style="margin-top:6px;text-align:center"><span class="chip demo">DEMO</span> esta semana inclui relatórios de teste</div>' : ''}</div>
+  <div class="card tw"><h2 style="margin-bottom:8px">Casas lado a lado</h2>
+    <table><tr><th>#</th><th>Casa</th>${d.modelos.map((m) => `<th>${esc(m)}</th>`).join('')}<th>Média da semana<div class="sub" style="font-weight:400">sem DEMO</div></th><th>vs semana anterior</th></tr>
+    ${linhas.map((l) => `<tr><td><b>${l.pos ? l.pos + 'º' : '—'}</b></td><td><b>${esc(l.nome)}</b><div class="sub">${esc(l.apelido || '')}</div></td>
+      ${d.modelos.map((m) => { const c = l.cel[m]; return `<td>${c.nota != null ? `<div class="nota-cel ${corN(c.nota)}">${f2(c.nota)}</div><div class="sub">${c.relatorios.map((r) => `<a href="#" onclick="${r.fonte === 'sistema' ? `abrir('${r.codigo}')` : `toast('relatório do app antigo — fica na Secretaria')`};return false">${brc(r.data)}${r.demo ? '·demo' : ''}</a>`).join(' ')}</div>` : '<span class="sub">sem relatório</span>'}${c.delta != null ? '<div>' + dl(c.delta) + '</div>' : ''}</td>` }).join('')}
+      <td><div class="nota-cel ${corN(l.geral.nota)}">${f2(l.geral.nota)}</div><div class="sub">${l.geral.n} relat.</div></td><td>${dl(l.geral.delta)}<div class="sub">antes ${f2(l.geral.anterior)}</div></td></tr>`).join('')}</table></div>
+  <div class="card"><h2>Piores itens da semana</h2><div class="sub" style="margin-bottom:8px">perguntas que mais saíram 🟡/🔴 somando todas as casas</div>
+    ${d.piores.length ? d.piores.map((p) => `<div style="padding:7px 0;border-bottom:1px solid var(--bord)"><div><b>${p.vezes}×</b> ${esc(p.pergunta)} <span class="sub">· ${esc(p.area)}</span></div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:3px"><div style="height:6px;border-radius:3px;background:var(--verm);opacity:.75;width:${(p.vezes / max) * 60}%"></div><span class="sub">${Object.entries(p.casas).map(([c, n]) => esc((CASAS.find((x) => x.id === c) || {}).nome || c) + (n > 1 ? ' ' + n + '×' : '')).join(' · ')}</span></div></div>`).join('') : '<div class="vazio">nenhum item reprovado nesta semana 🎉</div>'}</div>
+  <div class="card"><h2>O que mais pegou em cada casa</h2>${linhas.map((l) => `<div style="padding:6px 0;border-bottom:1px solid var(--bord)"><b>${esc(l.nome)}</b>: <span class="sub">${(d.piores_por_casa[l.id] || []).map(esc).join(' · ') || 'nada reprovado'}</span></div>`).join('')}</div>`
+}
+
+// ======================================================= UNIFORME E EPI
+let PESSOAS = null, EPI_F = { casa: '' }
+const SIT = { ok: '<span class="chip v">em dia</span>', vence_logo: '<span class="chip a">troca em breve</span>', vencida: '<span class="chip r">troca vencida</span>', ca_vencido: '<span class="chip r">CA vencido</span>', devolvido: '<span class="chip n">devolvido</span>', trocado: '<span class="chip n">trocado</span>' }
+const casaPessoa = (txt) => { const t = String(txt || '').toLowerCase(); return /jardim|esmeralda/.test(t) ? 'jardim' : /caetano|scs/.test(t) ? 'scs' : /sbc|bernardo/.test(t) ? 'sbc' : /sp2|washington/.test(t) ? 'sp2' : /^cd\b|distrib/.test(t) ? 'cd' : '' }
+async function telaEpi() {
+  const q = EPI_F.casa ? '?casa=' + EPI_F.casa : ''
+  const [d, cat] = await Promise.all([api('/api/qualidade/epi/entregas' + q), api('/api/qualidade/epi/catalogo')])
+  window._CAT = cat
+  const todas = EPI_F.casa ? (await api('/api/qualidade/epi/entregas')).casas : d.casas
+  $('#main').innerHTML = `
+  <div class="card"><div class="row"><div><h2>🦺 Uniforme e EPI</h2><div class="sub">O que cada pessoa recebeu, quando, tamanho, CA e quando trocar. Alerta de troca vencida.</div></div>
+    <button class="pri" style="flex:0;white-space:nowrap" onclick="novaEntrega()">+ Registrar entrega</button></div></div>
+  <div class="kpis">${todas.map((c) => `<div class="kpi" style="cursor:pointer;${EPI_F.casa === c.id ? 'border-color:var(--ac);background:var(--ac2)' : ''}" onclick="EPI_F.casa=EPI_F.casa==='${c.id}'?'':'${c.id}';telaEpi()"><b>${c.pessoas}</b><span>${esc(c.nome)} · pessoas c/ entrega</span>
+    <div style="margin-top:4px">${c.vencidas ? `<span class="chip r">${c.vencidas} vencidas</span> ` : ''}${c.vence_logo ? `<span class="chip a">${c.vence_logo} em breve</span>` : ''}${!c.vencidas && !c.vence_logo && c.itens ? '<span class="chip v">em dia</span>' : ''}</div></div>`).join('')}</div>
+  ${d.alertas.length ? `<div class="aviso">⚠️ <b>${d.alertas.length} troca(s) pedindo atenção</b>${EPI_F.casa ? ' nesta casa' : ''}: ${d.alertas.slice(0, 6).map((e) => `${esc(e.pessoa_nome.split(' ')[0])} — ${esc(e.item_nome)} (${e.situacao === 'ca_vencido' ? 'CA vencido' : 'troca ' + brc(e.troca_em)})`).join(' · ')}${d.alertas.length > 6 ? '…' : ''}</div>` : ''}
+  <div class="card tw"><div class="row" style="margin-bottom:8px"><h2 style="flex:2">Entregas ${EPI_F.casa ? '— ' + esc(nomeCasa(EPI_F.casa)) : '(todas as casas)'}</h2><input style="flex:1" placeholder="🔎 buscar pessoa" oninput="filtrarEpi(this.value)"></div>
+    ${d.entregas.length ? `<table id="t-epi"><tr><th>Pessoa</th><th>Item</th><th>Tam.</th><th>Qtd</th><th>Entregue</th><th>CA</th><th>Trocar em</th><th>Situação</th><th>Recibo</th><th></th></tr>
+    ${d.entregas.map((e) => `<tr data-n="${esc(e.pessoa_nome.toLowerCase())}"><td><b>${esc(e.pessoa_nome)}</b><div class="sub">${esc(nomeCasa(e.casa_id) || '')}</div></td><td>${e.tipo === 'epi' ? '🦺' : '👕'} ${esc(e.item_nome)}${e.demo ? ' <span class="chip demo">DEMO</span>' : ''}</td><td>${esc(e.tamanho || '—')}</td><td>${e.qtd}</td><td>${brc(e.data_entrega)}</td>
+      <td class="sub">${esc(e.ca || '—')}${e.ca_validade ? '<br>val. ' + brc(e.ca_validade) : ''}</td><td>${e.troca_em ? br(e.troca_em) : '—'}</td><td>${SIT[e.situacao] || e.situacao}</td>
+      <td>${e.assinatura ? `<img src="${fotoUrl(e.assinatura)}" style="height:30px;background:#fff;border:1px solid var(--bord);border-radius:6px;cursor:pointer" onclick="window.open(this.src)">` : ''}${e.foto ? ` <a href="${fotoUrl(e.foto)}" target="_blank">📷</a>` : ''}${!e.assinatura && !e.foto ? '<span class="chip a">sem recibo</span>' : ''}</td>
+      <td style="white-space:nowrap">${e.status === 'ativo' ? `<button class="mini" onclick="trocar(${e.id})">trocar</button>` : ''} <button class="mini perigo" onclick="apagarEnt(${e.id})">×</button></td></tr>`).join('')}</table>` : '<div class="vazio">nenhuma entrega registrada ainda</div>'}</div>
+  <div class="card"><details><summary style="cursor:pointer;font-weight:700">⚙️ Itens de uniforme e EPI (prazo de troca e CA)</summary>
+    <table style="margin-top:8px"><tr><th>Item</th><th>Tipo</th><th>CA padrão</th><th>Troca (dias)</th></tr>${cat.map((c) => `<tr><td>${esc(c.nome)}</td><td>${c.tipo === 'epi' ? '🦺 EPI' : '👕 Uniforme'}</td>
+      <td><input id="cat-ca-${c.id}" value="${esc(c.ca || '')}" style="max-width:110px;padding:5px" onchange="salvarCat(${c.id})"></td>
+      <td><input id="cat-d-${c.id}" type="number" value="${c.troca_dias || ''}" style="max-width:90px;padding:5px" onchange="salvarCat(${c.id})"></td></tr>`).join('')}</table>
+    <div class="row" style="margin-top:10px"><input id="n-cat" placeholder="novo item (ex.: Protetor auricular)"><select id="n-tipo" style="flex:0;min-width:120px"><option value="epi">EPI</option><option value="uniforme">Uniforme</option></select><input id="n-dias" type="number" placeholder="troca (dias)" style="flex:0;min-width:110px"><button class="sec" style="flex:0" onclick="api('/api/qualidade/epi/catalogo',{nome:$('#n-cat').value,tipo:$('#n-tipo').value,troca_dias:$('#n-dias').value}).then(()=>telaEpi())">Adicionar</button></div></details></div>`
+}
+async function salvarCat(id) { try { await api('/api/qualidade/epi/catalogo', { id, ca: $('#cat-ca-' + id).value, troca_dias: $('#cat-d-' + id).value }); window._CAT = null; toast('salvo') } catch (e) { toast('⚠️ ' + e.message) } }
+function filtrarEpi(v) { v = v.toLowerCase(); document.querySelectorAll('#t-epi tr[data-n]').forEach((tr) => tr.style.display = tr.dataset.n.includes(v) ? '' : 'none') }
+async function trocar(id) { if (!confirm('Marcar como trocado? (depois registre a nova entrega)')) return; await api('/api/qualidade/epi/entregas/' + id, { status: 'trocado' }); novaEntrega(); telaEpi() }
+async function apagarEnt(id) { if (!confirm('Apagar este registro?')) return; await api('/api/qualidade/epi/entregas/' + id, { apagar: true }); telaEpi() }
+let ASSIN = null
+async function novaEntrega() {
+  if (!PESSOAS) { try { PESSOAS = (await api('/api/pessoas')).pessoas.filter((p) => p.ativo) } catch { PESSOAS = [] } }
+  const cat = window._CAT || await api('/api/qualidade/epi/catalogo')
+  modal(`<h2>Registrar entrega</h2>
+    <label>Pessoa (lista do RH)</label><input id="e-pes" list="dl-pes" placeholder="digite o nome…" oninput="pesEscolhida()"><datalist id="dl-pes">${PESSOAS.map((p) => `<option value="${esc(p.nome)}">${esc(p.casa || '')} · ${esc(p.cargo || '')}</option>`).join('')}</datalist>
+    <div class="row"><div><label>Casa</label><select id="e-casa">${CASAS.filter((c) => c.ativo).map((c) => `<option value="${c.id}" ${c.id === EPI_F.casa ? 'selected' : ''}>${esc(c.nome)}</option>`).join('')}</select></div><div><label>Data da entrega</label><input id="e-data" type="date" value="${hoje()}"></div></div>
+    <label>Item</label><select id="e-item" onchange="itemEscolhido()">${cat.map((c) => `<option value="${c.id}">${c.tipo === 'epi' ? '🦺' : '👕'} ${esc(c.nome)}</option>`).join('')}</select>
+    <div class="row"><div><label>Tamanho</label><input id="e-tam" placeholder="P, M, G, 40…"></div><div><label>Quantidade</label><input id="e-qtd" type="number" value="1" min="1"></div></div>
+    <div class="row"><div><label>CA (EPI)</label><input id="e-ca" placeholder="nº do CA"></div><div><label>Validade do CA</label><input id="e-cav" type="date"></div></div>
+    <label>Trocar em</label><input id="e-troca" type="date">
+    <label>Assinatura de quem recebeu</label><canvas class="assin" id="e-assin"></canvas><div class="row" style="margin-top:4px"><button class="mini" style="flex:0" onclick="limparAssin()">limpar assinatura</button>
+    <label class="mini" style="flex:0;margin:0;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">📷 ou foto do recibo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="fotoRecibo(this)"></label><span id="e-fok" class="sub"></span></div>
+    <label>Observação</label><input id="e-obs">
+    <label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="e-demo" style="width:auto"> registro de teste (DEMO)</label>
+    <div class="row" style="margin-top:14px"><button onclick="modal('')">Cancelar</button><button class="pri" onclick="salvarEntrega()">Salvar entrega</button></div>`)
+  itemEscolhido(); iniciarAssin()
+}
+function pesEscolhida() { const p = PESSOAS.find((x) => x.nome === $('#e-pes').value); if (p) { const c = casaPessoa(p.casa); if (c) $('#e-casa').value = c } }
+function itemEscolhido() { const it = (window._CAT || []).find((c) => c.id === +$('#e-item').value); if (!it) return; $('#e-ca').value = it.ca || ''; const d = new Date($('#e-data').value + 'T12:00:00Z'); if (it.troca_dias) { d.setUTCDate(d.getUTCDate() + it.troca_dias); $('#e-troca').value = d.toISOString().slice(0, 10) } else $('#e-troca').value = '' }
+let FOTO_REC = null, FOTO_ORIG = null, ASSIN_TEM = false
+function iniciarAssin() {
+  const c = $('#e-assin'), r = c.getBoundingClientRect(); c.width = r.width * 2; c.height = r.height * 2
+  const x = c.getContext('2d'); x.lineWidth = 4; x.lineCap = 'round'; x.strokeStyle = '#16211d'; ASSIN_TEM = false; FOTO_REC = null; FOTO_ORIG = null
+  let on = false; const pos = (e) => { const b = c.getBoundingClientRect(); return [(e.clientX - b.left) * 2, (e.clientY - b.top) * 2] }
+  c.onpointerdown = (e) => { on = true; c.setPointerCapture(e.pointerId); x.beginPath(); x.moveTo(...pos(e)) }
+  c.onpointermove = (e) => { if (!on) return; x.lineTo(...pos(e)); x.stroke(); ASSIN_TEM = true }
+  c.onpointerup = () => { on = false }
+}
+function limparAssin() { const c = $('#e-assin'); c.getContext('2d').clearRect(0, 0, c.width, c.height); ASSIN_TEM = false }
+async function fotoRecibo(input) { const f = input.files[0]; if (!f) return; const img = await new Promise((ok) => { const i = new Image(); i.onload = () => ok(i); i.src = URL.createObjectURL(f) }); const s = Math.min(1, 1280 / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = img.width * s; c.height = img.height * s; c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); input.value = ''; const orig = c.toDataURL('image/jpeg', 0.8); const m = await caneta(orig); if (!m) return; FOTO_REC = m.url; FOTO_ORIG = m.marcou ? orig : null; $('#e-fok').textContent = m.marcou ? '📷 foto marcada ok' : '📷 foto ok' }
+async function salvarEntrega() {
+  const nome = $('#e-pes').value.trim(); if (!nome) return toast('escolha a pessoa')
+  const p = PESSOAS.find((x) => x.nome === nome)
+  try {
+    const r = await api('/api/qualidade/epi/entregas', { pessoa_id: p ? p.id : null, pessoa_nome: nome, casa_id: $('#e-casa').value, item_id: +$('#e-item').value, tamanho: $('#e-tam').value, qtd: +$('#e-qtd').value,
+      data_entrega: $('#e-data').value, ca: $('#e-ca').value, ca_validade: $('#e-cav').value, troca_em: $('#e-troca').value, obs: $('#e-obs').value, demo: $('#e-demo').checked,
+      assinatura: ASSIN_TEM ? $('#e-assin').toDataURL('image/png') : null, foto: FOTO_REC, foto_original: FOTO_ORIG })
+    modal(''); toast('✔ entrega registrada' + (r.troca_em ? ' — troca em ' + br(r.troca_em) : '')); telaEpi()
+  } catch (e) { toast('⚠️ ' + e.message) }
+}
+
+// ======================================================= MODELOS
+let MOD = null
+async function telaModelos(id) {
+  if (!id) {
+    $('#main').innerHTML = `<div class="card"><h2>Modelos de relatório</h2><div class="sub">Cada modelo tem as perguntas, separadas por área, e o PESO de cada uma na nota. Mudar o modelo não altera relatórios já feitos.</div></div>
+    ${MODELOS.map((m) => `<div class="card"><div class="row"><div><h2>${esc(m.nome)}</h2><div class="sub">${m.n_perguntas} perguntas · soma dos pesos ${String(m.soma_pesos || 0).replace('.', ',')} · para ${m.para === 'loja' ? 'lojas' : m.para === 'cd' ? 'CD' : 'todas as casas'}</div><div class="sub">${esc(m.descricao || '')}</div></div>
+      <button class="sec" style="flex:0" onclick="telaModelos(${m.id})">Editar</button></div></div>`).join('')}
+    <div class="card"><h2>Novo modelo</h2><div class="row"><input id="nm-nome" placeholder="ex.: Relatório Geral — CD"><select id="nm-copia"><option value="">começar vazio</option>${MODELOS.map((m) => `<option value="${m.id}">copiar de: ${esc(m.nome)}</option>`).join('')}</select>
+      <select id="nm-para"><option value="todas">todas as casas</option><option value="loja">só lojas</option><option value="cd">só CD</option></select><button class="pri" style="flex:0" onclick="novoModelo()">Criar</button></div></div>`
+    return
+  }
+  MOD = await api('/api/qualidade/modelos/' + id)
+  desenharModelo()
+}
+function desenharModelo() {
+  const areas = [...new Set(MOD.perguntas.map((p) => p.area))]
+  $('#main').innerHTML = `<div class="card"><button class="mini" onclick="telaModelos()">← modelos</button>
+    <label>Nome do modelo</label><input value="${esc(MOD.nome)}" oninput="MOD.nome=this.value"><label>Descrição</label><input value="${esc(MOD.descricao || '')}" oninput="MOD.descricao=this.value">
+    <div class="sub" style="margin-top:8px">Peso = quanto a pergunta vale na nota (1 normal · 2 importante · 3 crítico). Respostas: 🟢 vale tudo · 🟡 metade · 🔴 zero · N/A não conta.</div></div>
+  ${areas.map((a) => `<div class="card"><div class="row"><input value="${esc(a)}" style="font-weight:700" onchange="renArea(${JSON.stringify(a).replace(/"/g, '&quot;')},this.value)"><button class="mini sec" style="flex:0;white-space:nowrap" onclick="addQ(${JSON.stringify(a).replace(/"/g, '&quot;')})">+ pergunta</button></div>
+    <div class="ed-q sub" style="border:0"><span>Pergunta</span><span>Peso</span><span></span></div>
+    ${MOD.perguntas.map((p, i) => p.area !== a ? '' : `<div class="ed-q"><input value="${esc(p.pergunta)}" oninput="MOD.perguntas[${i}].pergunta=this.value"><input type="number" min="0" max="10" step="0.5" value="${p.peso}" oninput="MOD.perguntas[${i}].peso=+this.value"><button class="mini perigo" onclick="MOD.perguntas.splice(${i},1);desenharModelo()">×</button></div>`).join('')}</div>`).join('')}
+  <div class="card"><div class="row"><input id="na-area" placeholder="nova área (ex.: Vestiário)"><button class="sec" style="flex:0;white-space:nowrap" onclick="if($('#na-area').value){addQ($('#na-area').value)}">+ área</button></div></div>
+  <div class="row"><button class="perigo" style="flex:0" onclick="if(confirm('Arquivar este modelo?'))api('/api/qualidade/modelos/${MOD.id}',{apagar:true}).then(async()=>{await carregarBase();telaModelos()})">Arquivar modelo</button></div>`
+  $('#barra').innerHTML = `<div class="barra"><div class="sub" style="flex:1">${MOD.perguntas.length} perguntas · soma dos pesos ${MOD.perguntas.reduce((s, p) => s + (+p.peso || 0), 0)}</div><button class="pri" onclick="salvarModelo()">Salvar modelo</button></div>`
+}
+function addQ(area) { MOD.perguntas.push({ area, pergunta: '', peso: 1 }); desenharModelo(); const ins = [...document.querySelectorAll('.ed-q input:not([type])')]; const alvo = ins.filter((x) => !x.value).pop(); alvo && alvo.focus() }
+function renArea(de, para) { for (const p of MOD.perguntas) if (p.area === de) p.area = para; desenharModelo() }
+async function salvarModelo() { try { await api('/api/qualidade/modelos/' + MOD.id, { nome: MOD.nome, descricao: MOD.descricao, perguntas: MOD.perguntas }); await carregarBase(); toast('✔ modelo salvo'); telaModelos(MOD.id) } catch (e) { toast('⚠️ ' + e.message) } }
+async function novoModelo() { try { const r = await api('/api/qualidade/modelos', { nome: $('#nm-nome').value, copiar_de: $('#nm-copia').value || null, para: $('#nm-para').value }); await carregarBase(); telaModelos(r.id) } catch (e) { toast('⚠️ ' + e.message) } }
+
+// ======================================================= RESTAURANTES
+function telaCasas() {
+  $('#main').innerHTML = `<div class="card"><h2>Restaurantes</h2><div class="sub">O e-mail cadastrado aqui é para onde vai o relatório finalizado.</div></div>
+  ${CASAS.map((c) => `<div class="card" style="${c.ativo ? '' : 'opacity:.6'}"><div class="row"><div><label>Nome</label><input id="c-nome-${c.id}" value="${esc(c.nome)}"></div><div><label>Apelido / endereço</label><input id="c-ap-${c.id}" value="${esc(c.apelido || '')}"></div></div>
+    <div class="row"><div><label>E-mail para relatório</label><input id="c-em-${c.id}" type="email" value="${esc(c.email || '')}" placeholder="gerente@…; outro@…"></div><div><label>Responsável</label><input id="c-resp-${c.id}" value="${esc(c.responsavel || '')}"></div></div>
+    <div class="row" style="margin-top:10px"><span class="sub">${c.tipo === 'cd' ? 'CD' : 'Loja'}${c.ativo ? '' : ' · desativada'}</span><button class="sec" style="flex:0" onclick="salvarCasa('${c.id}')">Salvar</button></div></div>`).join('')}
+  <div class="card"><h2>+ Cadastrar restaurante</h2><div class="row"><div><label>Nome</label><input id="nc-nome"></div><div><label>Apelido / endereço</label><input id="nc-ap"></div></div>
+    <div class="row"><div><label>E-mail</label><input id="nc-em" type="email"></div><div><label>Tipo</label><select id="nc-tipo"><option value="loja">Loja</option><option value="cd">CD / produção</option></select></div></div>
+    <div style="margin-top:10px"><button class="pri" onclick="novaCasa()">Cadastrar</button></div></div>`
+}
+async function salvarCasa(id) { try { await api('/api/qualidade/casas', { id, nome: $('#c-nome-' + id).value, apelido: $('#c-ap-' + id).value, email: $('#c-em-' + id).value, responsavel: $('#c-resp-' + id).value }); await carregarBase(); toast('✔ salvo') } catch (e) { toast('⚠️ ' + e.message) } }
+async function novaCasa() { try { await api('/api/qualidade/casas', { nome: $('#nc-nome').value, apelido: $('#nc-ap').value, email: $('#nc-em').value, tipo: $('#nc-tipo').value }); await carregarBase(); toast('✔ cadastrado'); telaCasas() } catch (e) { toast('⚠️ ' + e.message) } }
+
+
+
+// ======================================================= 🖊️ CANETA (marcar a foto com o dedo)
+const CORES = [['#ef1c1c', 'vermelho'], ['#facc15', 'amarelo'], ['#2563eb', 'azul']]
+function caneta(dataUrl) {
+  return new Promise((fim) => {
+    const img = new Image()
+    img.onload = () => {
+      const W = img.width, H = img.height, tracos = []
+      let cor = CORES[0][0], atual = null
+      const d = document.createElement('div'); d.id = 'caneta'
+      d.innerHTML = `<div class="ct-topo"><b>🖊️ Circule o problema</b><span class="sub" style="color:#cbd5d1">use o dedo</span></div>
+        <div class="ct-area"><canvas></canvas></div>
+        <div class="ct-bar"><div class="ct-cores">${CORES.map(([c, n], i) => `<button class="ct-cor ${i ? '' : 'on'}" data-c="${c}" title="${n}" style="background:${c}"></button>`).join('')}</div>
+          <button data-a="desfazer">↶ Desfazer</button><button data-a="limpar">Limpar</button></div>
+        <div class="ct-bar"><button data-a="cancelar">Cancelar</button><button class="pri" data-a="salvar" style="flex:1">Salvar ✓</button></div>`
+      document.body.appendChild(d)
+      const cv = d.querySelector('canvas'), area = d.querySelector('.ct-area')
+      const esc = Math.min(area.clientWidth / W, area.clientHeight / H)
+      cv.style.width = Math.round(W * esc) + 'px'; cv.style.height = Math.round(H * esc) + 'px'
+      cv.width = W; cv.height = H
+      const x = cv.getContext('2d'), larg = Math.max(4, Math.round(Math.max(W, H) * 0.007))
+      const desenhar = (ctx) => {
+        ctx.drawImage(img, 0, 0, W, H)
+        for (const t of tracos) {
+          ctx.strokeStyle = t.cor; ctx.lineWidth = larg; ctx.lineCap = 'round'; ctx.lineJoin = 'round'
+          ctx.beginPath(); t.p.forEach(([a, b], i) => (i ? ctx.lineTo(a, b) : ctx.moveTo(a, b)))
+          if (t.p.length === 1) ctx.lineTo(t.p[0][0] + 0.1, t.p[0][1])
+          ctx.stroke()
+        }
+      }
+      desenhar(x)
+      const pos = (e) => { const b = cv.getBoundingClientRect(); return [((e.clientX - b.left) / b.width) * W, ((e.clientY - b.top) / b.height) * H] }
+      cv.onpointerdown = (e) => { e.preventDefault(); cv.setPointerCapture(e.pointerId); atual = { cor, p: [pos(e)] }; tracos.push(atual); desenhar(x) }
+      cv.onpointermove = (e) => { if (!atual) return; e.preventDefault(); atual.p.push(pos(e)); desenhar(x) }
+      cv.onpointerup = cv.onpointercancel = () => { atual = null }
+      const sai = (v) => { d.remove(); fim(v) }
+      d.querySelectorAll('.ct-cor').forEach((b) => (b.onclick = () => { cor = b.dataset.c; d.querySelectorAll('.ct-cor').forEach((z) => z.classList.toggle('on', z === b)) }))
+      d.querySelector('[data-a=desfazer]').onclick = () => { tracos.pop(); desenhar(x) }
+      d.querySelector('[data-a=limpar]').onclick = () => { tracos.length = 0; desenhar(x) }
+      d.querySelector('[data-a=cancelar]').onclick = () => sai(null)
+      d.querySelector('[data-a=salvar]').onclick = () => sai(tracos.length ? { url: cv.toDataURL('image/jpeg', 0.82), marcou: true } : { url: dataUrl, marcou: false })
+    }
+    img.onerror = () => fim({ url: dataUrl, marcou: false })
+    img.src = dataUrl
+  })
+}
+
+async function iniciarApp() {
+  try { await carregarBase() } catch (e) { $('#main').innerHTML = `<div class="vazio">⚠️ ${esc(e.message)}</div>`; return }
+  nav()
+  const m = location.hash.match(/r=([\w-]+)/)
+  if (m) abrir(m[1]).catch(() => ir('preencher')); else ir(ABA)
+}
+if (!SESS) telaLogin(); else iniciarApp()
+</script>
+</body>
+</html>

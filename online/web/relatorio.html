@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Relatório de Qualidade</title>
+<style>
+@page{size:A4;margin:14mm 12mm}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font:11.5px/1.45 'Segoe UI',Arial,sans-serif;color:#16211d;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.pag{max-width:820px;margin:0 auto;padding:18px}
+.topo{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid #0f766e;padding-bottom:10px}
+.topo h1{font-size:20px;color:#0f766e}
+.topo .sub{color:#5b6b64}
+.nota{text-align:right}.nota b{font-size:34px;display:block;line-height:1}
+.cv{color:#16a34a}.ca{color:#d97706}.cr{color:#dc2626}
+.info{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.info div{background:#f4f6f5;border-radius:8px;padding:7px 9px}.info span{display:block;color:#5b6b64;font-size:10px;text-transform:uppercase;letter-spacing:.04em}
+.resumo{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.chip{display:inline-block;border-radius:99px;padding:2px 9px;font-size:11px;font-weight:700}
+.v{background:#e8f7ee;color:#16a34a}.a{background:#fdf3e1;color:#b45309}.r{background:#fdecec;color:#dc2626}.n{background:#eef1f4;color:#64748b}
+h2{font-size:13.5px;margin:16px 0 6px;color:#0f766e;display:flex;justify-content:space-between;border-bottom:1px solid #dfe5e2;padding-bottom:3px}
+table{width:100%;border-collapse:collapse}
+td,th{padding:5px 6px;border-bottom:1px solid #eef1ef;vertical-align:top;text-align:left}
+th{font-size:10px;color:#5b6b64;text-transform:uppercase}
+td.r1{width:110px;white-space:nowrap}td.pp{width:40px;color:#93a19a;text-align:center}
+.com{color:#5b6b64;font-size:10.5px;margin-top:2px}
+.fotos{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.fotos img{width:150px;height:110px;object-fit:cover;border-radius:6px;border:1px solid #dfe5e2}
+.areas td{font-size:11px}
+.bar{height:7px;background:#eef1ef;border-radius:4px;overflow:hidden;width:140px;display:inline-block;vertical-align:middle}.bar i{display:block;height:100%}
+.nc{border:1px solid #f3d9a8;background:#fffbf3;border-radius:8px;padding:8px 10px;margin-bottom:6px;break-inside:avoid}
+.nc.verm{border-color:#f3c4c4;background:#fff7f7}
+.obs{background:#f4f6f5;border-radius:8px;padding:9px 11px;white-space:pre-wrap}
+.rod{margin-top:22px;display:flex;justify-content:space-between;color:#93a19a;font-size:10px;border-top:1px solid #dfe5e2;padding-top:6px}
+.ass{margin-top:30px;display:grid;grid-template-columns:1fr 1fr;gap:40px}.ass div{border-top:1px solid #16211d;padding-top:4px;text-align:center;color:#5b6b64}
+.demo{background:#ede9fe;color:#6d28d9;font-weight:700;padding:6px 10px;border-radius:8px;margin-top:8px;text-align:center}
+.acoes{position:fixed;top:10px;right:10px;display:flex;gap:6px}.acoes button{font:inherit;padding:8px 12px;border-radius:8px;border:1px solid #0f766e;background:#0f766e;color:#fff;cursor:pointer}
+@media print{.acoes{display:none}.pag{padding:0}}
+@media(max-width:640px){.info{grid-template-columns:1fr 1fr}.acoes{position:static;justify-content:flex-end;padding:8px}}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+<div class="acoes" id="acoes"><button id="b-pdf" onclick="baixarPdf()" disabled>⬇️ Baixar PDF</button><button onclick="print()">🖨️ Imprimir</button></div>
+<div class="pag" id="pag">carregando…</div>
+<script>
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+const f2 = (n) => n == null ? '—' : Number(n).toFixed(2).replace('.', ',')
+const br = (iso) => iso ? iso.split('-').reverse().join('/') : '—'
+const cor = (n) => n == null ? '' : n < 85 ? 'cr' : n < 92 ? 'ca' : 'cv'
+const barc = (n) => n == null ? '#cbd5d1' : n < 85 ? '#dc2626' : n < 92 ? '#d97706' : '#16a34a'
+const R = { verde: '<span class="chip v">🟢 Conforme</span>', amarela: '<span class="chip a">🟡 Parcial</span>', vermelha: '<span class="chip r">🔴 Não conforme</span>', na: '<span class="chip n">N/A</span>' }
+const FN = 'https://kuyhkltbwlkvtgbabscv.supabase.co/functions/v1/qualidade'
+let SESS = ''; try { SESS = localStorage.getItem('qual_sessao') || '' } catch {}
+let NOME_PDF = 'relatorio.pdf'
+async function baixarPdf() {
+  const b = document.getElementById('b-pdf'); b.disabled = true; b.textContent = 'gerando…'
+  try {
+    await html2pdf().set({ margin: [10, 8, 10, 8], filename: NOME_PDF, image: { type: 'jpeg', quality: 0.9 }, html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: 'mm', format: 'a4' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['.nc', 'tr', '.topo', '.info'] } }).from(document.getElementById('pag')).save()
+  } catch (e) { alert('não gerou o PDF: ' + e.message) }
+  b.disabled = false; b.textContent = '⬇️ Baixar PDF'
+}
+;(async () => {
+  const cod = decodeURIComponent(location.hash.slice(1))
+  if (!SESS) { document.getElementById('pag').innerHTML = 'Entre primeiro no app: <a href="./">Qualidade</a>'; return }
+  const r = await (await fetch(FN + '/relatorios/' + encodeURIComponent(cod), { headers: { 'x-sessao': SESS } })).json()
+  if (r.erro) { document.getElementById('pag').textContent = r.erro; return }
+  document.title = `Relatório ${r.modelo_nome} — ${r.casa?.nome || ''} — ${br(r.data)}`
+  NOME_PDF = `Relatorio ${r.modelo_nome} - ${r.casa ? r.casa.nome : r.casa_id} - ${r.data.split('-').reverse().join('-')}${r.demo ? ' (DEMO)' : ''}.pdf`.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w .()-]/g, '')
+  const c = r.calc
+  const foto = (f) => `<img crossorigin="anonymous" src="${FN}/foto/${encodeURIComponent(f)}?s=${SESS}">`
+  document.getElementById('pag').innerHTML = `
+  <div class="topo"><div><h1>Relatório · ${esc(r.modelo_nome)}</h1><div class="sub">Qualidade e Segurança dos Alimentos — Grupo Botequim</div></div>
+    <div class="nota"><span class="sub">Nota final</span><b class="${cor(c.nota)}">${f2(c.nota)}%</b></div></div>
+  ${r.demo ? '<div class="demo">RELATÓRIO DE DEMONSTRAÇÃO — dados de teste</div>' : ''}
+  <div class="info"><div><span>Restaurante</span><b>${esc(r.casa?.nome || r.casa_id)}</b>${r.casa?.apelido ? '<br>' + esc(r.casa.apelido) : ''}</div><div><span>Data da visita</span><b>${br(r.data)}</b></div>
+    <div><span>Nutricionista</span><b>${esc(r.nutri)}</b></div><div><span>Acompanhou</span><b>${esc(r.acompanhou || '—')}</b></div></div>
+  <div class="resumo"><span class="chip v">🟢 ${c.verde} conformes</span><span class="chip a">🟡 ${c.amarela} parciais</span><span class="chip r">🔴 ${c.vermelha} não conformes</span><span class="chip n">N/A ${c.na}</span>${c.sem ? `<span class="chip n">${c.sem} sem resposta</span>` : ''}
+    <span class="sub" style="margin-left:auto">nota = pontos ${f2(c.pontos)} ÷ peso ${f2(c.peso_total)} · 🟢 1 · 🟡 0,5 · 🔴 0 · N/A fora da conta</span></div>
+  <h2><span>Nota por área</span></h2>
+  <table class="areas">${r.areas.map((a) => `<tr><td>${esc(a.area)}</td><td style="width:170px"><span class="bar"><i style="width:${a.nota ?? 0}%;background:${barc(a.nota)}"></i></span></td><td style="width:70px" class="${cor(a.nota)}"><b>${a.nota != null ? f2(a.nota) + '%' : 'N/A'}</b></td><td style="width:110px" class="sub">${a.vermelha ? '🔴' + a.vermelha + ' ' : ''}${a.amarela ? '🟡' + a.amarela : ''}</td></tr>`).join('')}</table>
+  ${r.ncs.length ? `<h2><span>Pontos de atenção (${r.ncs.length})</span></h2>${r.ncs.map((x) => `<div class="nc ${x.resposta === 'vermelha' ? 'verm' : ''}">${R[x.resposta]} <b>${esc(x.area)}</b> — ${esc(x.pergunta)} <span class="sub">(peso ${String(x.peso).replace('.', ',')})</span>
+    ${x.comentario ? `<div class="com">${esc(x.comentario)}</div>` : ''}${(x.fotos || []).length ? `<div class="fotos">${x.fotos.map(foto).join('')}</div>` : ''}</div>`).join('')}` : '<h2><span>Pontos de atenção</span></h2><div class="sub">Nenhum item fora do padrão.</div>'}
+  ${r.obs ? `<h2><span>Observações gerais</span></h2><div class="obs">${esc(r.obs)}</div>` : ''}
+  <h2><span>Checklist completo</span></h2>
+  ${r.areas.map((a) => `<table style="margin-bottom:8px"><tr><th>${esc(a.area)}</th><th style="text-align:center">Peso</th><th>Resposta</th></tr>${a.itens.map((x) => `<tr><td>${esc(x.pergunta)}${x.comentario ? `<div class="com">${esc(x.comentario)}</div>` : ''}${(x.fotos || []).length && x.resposta === 'verde' ? `<div class="fotos">${x.fotos.map(foto).join('')}</div>` : ''}</td><td class="pp">${String(x.peso).replace('.', ',')}</td><td class="r1">${R[x.resposta] || '<span class="chip n">—</span>'}</td></tr>`).join('')}</table>`).join('')}
+  <div class="ass"><div>${esc(r.nutri)} — Nutricionista</div><div>${esc(r.acompanhou || 'Responsável da casa')}</div></div>
+  <div class="rod"><span>Relatório nº ${esc(r.codigo)}</span><span>Gerado em ${new Date().toLocaleString('pt-BR')}</span></div>`
+  // aguarda as fotos (Chrome headless imprime depois do virtual-time-budget)
+  await Promise.all([...document.images].map((i) => i.complete ? 0 : new Promise((ok) => { i.onload = i.onerror = ok })))
+  document.body.dataset.pronto = '1'
+  document.getElementById('b-pdf').disabled = false
+  if (/baixar=1/.test(location.search)) baixarPdf()
+})()
+</script>
+</body>
+</html>
