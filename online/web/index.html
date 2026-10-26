@@ -196,7 +196,7 @@ async function abrir(codigo) {
   const itens = REL.areas.flatMap((a) => a.itens)
   $('#main').innerHTML = `
   <div class="card"><div class="row"><div><h2>${esc(nomeCasa(REL.casa_id))} — ${esc(REL.modelo_nome)} ${REL.demo ? '<span class="chip demo">DEMO</span>' : ''}</h2><div class="sub">${br(REL.data)} · ${esc(REL.nutri)} · toque na carinha de cada pergunta. Tudo salva sozinho.</div></div>
-  <button class="mini sec" style="flex:0" onclick="marcarTudoVerde()">🟢 Marcar o resto como conforme</button></div></div>
+  <button class="mini sec" style="flex:0" onclick="marcarTudoVerde()">😃 Marcar o resto como conforme</button></div></div>
   ${REL.areas.map((a, ai) => `<details class="area" ${ai === 0 ? 'open' : ''}><summary>${esc(a.area)}<span class="cont" id="ac-${ai}"></span></summary>
     ${a.itens.map((q) => `<div class="q" id="q-${q.id}"><div class="txt">${esc(q.pergunta)}<span class="peso">peso ${String(q.peso).replace('.', ',')}</span></div>
       <div class="faces">${FACES.map(([k, e, t]) => `<button class="${k}" onclick="resp(${q.id},'${k}')"><span class="e">${e}</span>${t}</button>`).join('')}</div>
@@ -269,7 +269,7 @@ function telaFim() {
   $('#main').innerHTML = `
   <div class="card" style="text-align:center"><div class="sub">${esc(nomeCasa(REL.casa_id))} — ${esc(REL.modelo_nome)} · ${br(REL.data)} ${REL.demo ? '<span class="chip demo">DEMO</span>' : ''}</div>
     <div class="big ${corN(c.nota)}" style="margin:10px 0 4px">${f2(c.nota)}%</div><div class="sub">nota ponderada pelo peso das perguntas · N/A fora da conta</div>
-    <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap"><span class="chip v">🟢 ${c.verde}</span><span class="chip a">🟡 ${c.amarela}</span><span class="chip r">🔴 ${c.vermelha}</span><span class="chip n">N/A ${c.na}</span>${c.sem ? `<span class="chip n">sem resposta ${c.sem}</span>` : ''}</div>
+    <div style="margin-top:10px;display:flex;gap:6px;justify-content:center;flex-wrap:wrap"><span class="chip v">😃 ${c.verde}</span><span class="chip a">😐 ${c.amarela}</span><span class="chip r">☹️ ${c.vermelha}</span><span class="chip n">N/A ${c.na}</span>${c.sem ? `<span class="chip n">sem resposta ${c.sem}</span>` : ''}</div>
     ${!REL.demo ? '<div class="sub" style="margin-top:8px">✔ entrou no ranking e nas pendências da casa</div>' : '<div class="sub" style="margin-top:8px">DEMO — não entra no ranking oficial</div>'}</div>
   <div class="card"><h2>Enviar / guardar</h2>
     <div class="row" style="margin-top:8px"><button class="pri" onclick="window.open('relatorio.html#${REL.codigo}')">📄 Ver PDF</button><button class="sec" onclick="window.open('relatorio.html?baixar=1#${REL.codigo}')">⬇️ Baixar PDF</button></div>
@@ -293,7 +293,7 @@ async function telaRelatorios() {
   const rs = await api('/api/qualidade/relatorios')
   $('#main').innerHTML = `<div class="card"><div class="row"><div><h2>Relatórios feitos aqui</h2><div class="sub">Os relatórios antigos do app de terceiro ficam na Secretaria (contam no comparativo).</div></div>
     ${rs.some((r) => r.demo) ? `<button class="perigo mini" style="flex:0" onclick="apagarDemo()">🗑️ Apagar todos os DEMO</button>` : ''}</div></div>
-  <div class="card tw">${rs.length ? `<table><tr><th>Data</th><th>Casa</th><th>Relatório</th><th>Nota</th><th>🟢🟡🔴</th><th></th></tr>${rs.map((r) => `<tr><td>${brc(r.data)}</td><td>${esc(nomeCasa(r.casa_id))}</td><td>${esc(r.modelo_nome)} ${r.demo ? '<span class="chip demo">DEMO</span>' : ''}${r.status === 'rascunho' ? ' <span class="chip n">rascunho</span>' : ''}</td>
+  <div class="card tw">${rs.length ? `<table><tr><th>Data</th><th>Casa</th><th>Relatório</th><th>Nota</th><th>😃😐☹️</th><th></th></tr>${rs.map((r) => `<tr><td>${brc(r.data)}</td><td>${esc(nomeCasa(r.casa_id))}</td><td>${esc(r.modelo_nome)} ${r.demo ? '<span class="chip demo">DEMO</span>' : ''}${r.status === 'rascunho' ? ' <span class="chip n">rascunho</span>' : ''}</td>
     <td class="${corN(r.nota)}"><b>${r.nota != null ? f2(r.nota) + '%' : '—'}</b></td><td class="sub">${r.status === 'finalizado' ? `${r.n_verde}·${r.n_amarela}·${r.n_vermelha}` : ''}</td>
     <td style="white-space:nowrap"><button class="mini sec" onclick="abrir('${r.codigo}')">${r.status === 'rascunho' ? 'Continuar' : 'Abrir'}</button> ${r.status === 'finalizado' ? `<button class="mini" onclick="window.open('relatorio.html#${r.codigo}')">PDF</button>` : ''}</td></tr>`).join('')}</table>` : '<div class="vazio">nenhum relatório ainda — comece em ✍️ Preencher</div>'}</div>`
 }
@@ -417,7 +417,7 @@ function desenharModelo() {
   const areas = [...new Set(MOD.perguntas.map((p) => p.area))]
   $('#main').innerHTML = `<div class="card"><button class="mini" onclick="telaModelos()">← modelos</button>
     <label>Nome do modelo</label><input value="${esc(MOD.nome)}" oninput="MOD.nome=this.value"><label>Descrição</label><input value="${esc(MOD.descricao || '')}" oninput="MOD.descricao=this.value">
-    <div class="sub" style="margin-top:8px">Peso = quanto a pergunta vale na nota (1 normal · 2 importante · 3 crítico). Respostas: 🟢 vale tudo · 🟡 metade · 🔴 zero · N/A não conta.</div></div>
+    <div class="sub" style="margin-top:8px">Peso = quanto a pergunta vale na nota (1 normal · 2 importante · 3 crítico). Respostas: 😃 vale tudo · 😐 metade · ☹️ zero · N/A não conta.</div></div>
   ${areas.map((a) => `<div class="card"><div class="row"><input value="${esc(a)}" style="font-weight:700" onchange="renArea(${JSON.stringify(a).replace(/"/g, '&quot;')},this.value)"><button class="mini sec" style="flex:0;white-space:nowrap" onclick="addQ(${JSON.stringify(a).replace(/"/g, '&quot;')})">+ pergunta</button></div>
     <div class="ed-q sub" style="border:0"><span>Pergunta</span><span>Peso</span><span></span></div>
     ${MOD.perguntas.map((p, i) => p.area !== a ? '' : `<div class="ed-q"><input value="${esc(p.pergunta)}" oninput="MOD.perguntas[${i}].pergunta=this.value"><input type="number" min="0" max="10" step="0.5" value="${p.peso}" oninput="MOD.perguntas[${i}].peso=+this.value"><button class="mini perigo" onclick="MOD.perguntas.splice(${i},1);desenharModelo()">×</button></div>`).join('')}</div>`).join('')}

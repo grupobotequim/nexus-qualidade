@@ -49,7 +49,7 @@ const f2 = (n) => n == null ? '—' : Number(n).toFixed(2).replace('.', ',')
 const br = (iso) => iso ? iso.split('-').reverse().join('/') : '—'
 const cor = (n) => n == null ? '' : n < 85 ? 'cr' : n < 92 ? 'ca' : 'cv'
 const barc = (n) => n == null ? '#cbd5d1' : n < 85 ? '#dc2626' : n < 92 ? '#d97706' : '#16a34a'
-const R = { verde: '<span class="chip v">🟢 Conforme</span>', amarela: '<span class="chip a">🟡 Parcial</span>', vermelha: '<span class="chip r">🔴 Não conforme</span>', na: '<span class="chip n">N/A</span>' }
+const R = { verde: '<span class="chip v">😃 Conforme</span>', amarela: '<span class="chip a">😐 Parcial</span>', vermelha: '<span class="chip r">☹️ Não conforme</span>', na: '<span class="chip n">N/A</span>' }
 const FN = 'https://kuyhkltbwlkvtgbabscv.supabase.co/functions/v1/qualidade'
 let SESS = ''; try { SESS = localStorage.getItem('qual_sessao') || '' } catch {}
 let NOME_PDF = 'relatorio.pdf'
@@ -66,8 +66,9 @@ async function baixarPdf() {
   if (!SESS) { document.getElementById('pag').innerHTML = 'Entre primeiro no app: <a href="./">Qualidade</a>'; return }
   const r = await (await fetch(FN + '/relatorios/' + encodeURIComponent(cod), { headers: { 'x-sessao': SESS } })).json()
   if (r.erro) { document.getElementById('pag').textContent = r.erro; return }
-  document.title = `Relatório ${r.modelo_nome} — ${r.casa?.nome || ''} — ${br(r.data)}`
-  NOME_PDF = `Relatorio ${r.modelo_nome} - ${r.casa ? r.casa.nome : r.casa_id} - ${r.data.split('-').reverse().join('-')}${r.demo ? ' (DEMO)' : ''}.pdf`.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w .()-]/g, '')
+  const TIT = /^relat[óo]rio/i.test(r.modelo_nome || '') ? r.modelo_nome : `Relatório ${r.modelo_nome}` // 26/10: sem 'Relatório Relatório estrutural'
+  document.title = `${TIT} — ${r.casa?.nome || ''} — ${br(r.data)}`
+  NOME_PDF = `${TIT} -${r.casa ? r.casa.nome : r.casa_id} - ${r.data.split('-').reverse().join('-')}${r.demo ? ' (DEMO)' : ''}.pdf`.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w .()-]/g, '')
   const c = r.calc
   const foto = (f) => `<img crossorigin="anonymous" src="${FN}/foto/${encodeURIComponent(f)}?s=${SESS}">`
   document.getElementById('pag').innerHTML = `
@@ -76,10 +77,10 @@ async function baixarPdf() {
   ${r.demo ? '<div class="demo">RELATÓRIO DE DEMONSTRAÇÃO — dados de teste</div>' : ''}
   <div class="info"><div><span>Restaurante</span><b>${esc(r.casa?.nome || r.casa_id)}</b>${r.casa?.apelido ? '<br>' + esc(r.casa.apelido) : ''}</div><div><span>Data da visita</span><b>${br(r.data)}</b></div>
     <div><span>Nutricionista</span><b>${esc(r.nutri)}</b></div><div><span>Acompanhou</span><b>${esc(r.acompanhou || '—')}</b></div></div>
-  <div class="resumo"><span class="chip v">🟢 ${c.verde} conformes</span><span class="chip a">🟡 ${c.amarela} parciais</span><span class="chip r">🔴 ${c.vermelha} não conformes</span><span class="chip n">N/A ${c.na}</span>${c.sem ? `<span class="chip n">${c.sem} sem resposta</span>` : ''}
-    <span class="sub" style="margin-left:auto">nota = pontos ${f2(c.pontos)} ÷ peso ${f2(c.peso_total)} · 🟢 1 · 🟡 0,5 · 🔴 0 · N/A fora da conta</span></div>
+  <div class="resumo"><span class="chip v">😃 ${c.verde} conformes</span><span class="chip a">😐 ${c.amarela} parciais</span><span class="chip r">☹️ ${c.vermelha} não conformes</span><span class="chip n">N/A ${c.na}</span>${c.sem ? `<span class="chip n">${c.sem} sem resposta</span>` : ''}
+    <span class="sub" style="margin-left:auto">nota = pontos ${f2(c.pontos)} ÷ peso ${f2(c.peso_total)} · 😃 1 · 😐 0,5 · ☹️ 0 · N/A fora da conta</span></div>
   <h2><span>Nota por área</span></h2>
-  <table class="areas">${r.areas.map((a) => `<tr><td>${esc(a.area)}</td><td style="width:170px"><span class="bar"><i style="width:${a.nota ?? 0}%;background:${barc(a.nota)}"></i></span></td><td style="width:70px" class="${cor(a.nota)}"><b>${a.nota != null ? f2(a.nota) + '%' : 'N/A'}</b></td><td style="width:110px" class="sub">${a.vermelha ? '🔴' + a.vermelha + ' ' : ''}${a.amarela ? '🟡' + a.amarela : ''}</td></tr>`).join('')}</table>
+  <table class="areas">${r.areas.map((a) => `<tr><td>${esc(a.area)}</td><td style="width:170px"><span class="bar"><i style="width:${a.nota ?? 0}%;background:${barc(a.nota)}"></i></span></td><td style="width:70px" class="${cor(a.nota)}"><b>${a.nota != null ? f2(a.nota) + '%' : 'N/A'}</b></td><td style="width:110px" class="sub">${a.vermelha ? '☹️' + a.vermelha + ' ' : ''}${a.amarela ? '😐' + a.amarela : ''}</td></tr>`).join('')}</table>
   ${r.ncs.length ? `<h2><span>Pontos de atenção (${r.ncs.length})</span></h2>${r.ncs.map((x) => `<div class="nc ${x.resposta === 'vermelha' ? 'verm' : ''}">${R[x.resposta]} <b>${esc(x.area)}</b> — ${esc(x.pergunta)} <span class="sub">(peso ${String(x.peso).replace('.', ',')})</span>
     ${x.comentario ? `<div class="com">${esc(x.comentario)}</div>` : ''}${(x.fotos || []).length ? `<div class="fotos">${x.fotos.map(foto).join('')}</div>` : ''}</div>`).join('')}` : '<h2><span>Pontos de atenção</span></h2><div class="sub">Nenhum item fora do padrão.</div>'}
   ${r.obs ? `<h2><span>Observações gerais</span></h2><div class="obs">${esc(r.obs)}</div>` : ''}
