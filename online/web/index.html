@@ -45,12 +45,10 @@ main{max-width:980px;margin:0 auto;padding:16px}
 .q .txt{font-size:14.5px;margin-bottom:8px}
 .q .peso{font-size:11.5px;color:var(--ink3);font-weight:600;margin-left:4px;white-space:nowrap}
 .faces{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.faces button{padding:8px 2px;font-size:13px;border-width:2px;display:flex;flex-direction:column;align-items:center;gap:1px;font-weight:600;color:var(--ink2)}
-.faces button .e{font-size:24px;line-height:1}
-.faces button.verde.on{border-color:var(--verde);background:var(--verde-bg);color:var(--verde)}
-.faces button.amarela.on{border-color:var(--amar);background:var(--amar-bg);color:var(--amar)}
-.faces button.vermelha.on{border-color:var(--verm);background:var(--verm-bg);color:var(--verm)}
-.faces button.na.on{border-color:var(--na);background:var(--na-bg);color:var(--na)}
+/* 26/10 (Maria): carinha desenhada igual Checklist Fácil — cinza até marcar, marcada = cor cheia + carinha branca */
+.faces button{padding:9px 2px 7px;font-size:12px;border:0;border-radius:10px;background:#c9cfd6;display:flex;flex-direction:column;align-items:center;gap:3px;font-weight:700;color:#fff}
+.faces button .e{display:block;line-height:0}.faces button .e svg{width:30px;height:30px}
+.faces button.verde.on{background:#16a34a}.faces button.amarela.on{background:#f5a400}.faces button.vermelha.on{background:#e8590c}.faces button.na.on{background:#6b7280}
 .extra{margin-top:8px;display:none}
 .q.prob .extra{display:block}
 .fotos{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
@@ -148,7 +146,8 @@ async function entrar(ev) {
 function sair() { if (!confirm('Sair deste aparelho?')) return; LS.set('qual_sessao', ''); SESS = ''; location.reload() }
 function toast(m, ms) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 2600) }
 function modal(html) { $('#modal').innerHTML = html ? `<div class="modal" onclick="if(event.target===this)modal('')"><div class="box">${html}</div></div>` : '' }
-const FACES = [['verde', '😃', 'Conforme'], ['amarela', '😐', 'Parcial'], ['vermelha', '☹️', 'Não conf.'], ['na', '➖', 'N/A']]
+const CARA = (boca) => `<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="16" cy="16" r="13"/><circle cx="11.5" cy="13" r="1.3" fill="currentColor" stroke="none"/><circle cx="20.5" cy="13" r="1.3" fill="currentColor" stroke="none"/><path d="${boca}"/></svg>`
+const FACES = [['verde', CARA('M10.5 19q5.5 5 11 0'), 'Conforme'], ['amarela', CARA('M11 20.5h10'), 'Parcial'], ['vermelha', CARA('M10.5 22q5.5-5 11 0'), 'Não conf.'], ['na', '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 16h14"/></svg>', 'N/A']]
 const chipResp = (r) => r === 'verde' ? '<span class="chip v">😃 Conforme</span>' : r === 'amarela' ? '<span class="chip a">😐 Parcial</span>' : r === 'vermelha' ? '<span class="chip r">☹️ Não conforme</span>' : r === 'na' ? '<span class="chip n">N/A</span>' : '<span class="chip n">—</span>'
 
 let CASAS = [], MODELOS = []
