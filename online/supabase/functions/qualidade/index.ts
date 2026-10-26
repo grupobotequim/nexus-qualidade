@@ -159,7 +159,7 @@ async function comparativo(semIni?: string | null) {
     .map((r: Record<string, unknown>) => ({ codigo: r.codigo, casa_id: r.casa_id, data: r.data, nota: r.nota, fonte: 'sistema', ts: r.finalizado_em, modelo: r.modelo_nome, demo: r.demo ? 1 : 0 }))
   type Lin = { codigo: string; casa_id: string; data: string; nota: number; fonte: string; modelo: string; demo: number }
   const todos = [...hist, ...nossos] as Lin[]
-  const familia = (m: string) => (/^geral/i.test(m || '') ? 'Geral' : 'Rotina')
+  const familia = (m: string) => (/^geral/i.test(m || '') ? 'Geral' : /estrutur/i.test(m || '') ? 'Estrutural' : 'Rotina')
   const modelos = [...new Set(todos.map((r) => familia(r.modelo)))].sort((a, b) => (a === 'Rotina' ? -1 : b === 'Rotina' ? 1 : a.localeCompare(b)))
   const media = (arr: Lin[]) => (arr.length ? r2(arr.reduce((s, x) => s + x.nota, 0) / arr.length) : null)
   const dlt = (a: number | null, b: number | null) => (a != null && b != null ? r2(a - b) : null)
@@ -200,7 +200,33 @@ async function comparativo(semIni?: string | null) {
   const piores = Object.values(ag).sort((a, b) => b.vezes - a.vezes || b.vermelhas - a.vermelhas).slice(0, 12)
   // deno-lint-ignore no-explicit-any
   const porCasa = Object.fromEntries(casas.map((c: any) => [c.id, Object.values(ag).filter((a) => a.casas[c.id]).sort((a, b) => b.casas[c.id] - a.casas[c.id]).slice(0, 3).map((a) => a.pergunta)]))
-  return { semana: { de: ini, ate: fim }, anterior: { de: antIni, ate: antFim }, modelos, linhas, piores, piores_por_casa: porCasa, tem_demo: nossos.some((d: Lin) => d.demo && d.data >= ini) }
+  // reincidências de cada casa: pergunta que saiu 🟡/🔴 nesta semana e já tinha saído antes (últimas 4 semanas)
+  const r4Ini = addDias(ini, -21)
+  // deno-lint-ignore no-explicit-any
+  type X = Record<string, any>
+  const h4 = (await rest(`qualidade_historico?data=gte.${r4Ini}&data=lte.${fim}&nota=not.is.null&select=codigo,casa_id,data`)).map((r: X) => ({ ...r, fonte: 'hist' }))
+  const q4 = (await rest(`qualidade_relatorios?status=eq.finalizado&nota=not.is.null&data=gte.${r4Ini}&data=lte.${fim}&select=codigo,casa_id,data,demo`)).map((r: X) => ({ ...r, fonte: 'sistema' }))
+  const t4 = [...h4, ...q4] as X[]
+  const c4H = t4.filter((r) => r.fonte !== 'sistema').map((r) => r.codigo as string), c4Q = t4.filter((r) => r.fonte === 'sistema').map((r) => r.codigo as string)
+  const it4: X[] = [
+    ...(c4H.length ? await rest(`qualidade_historico_itens?codigo=in.(${enc(lista(c4H))})&nota=lt.5&select=codigo,area,pergunta,nota`) : []).map((x: X) => ({ ...x, grav: x.nota <= 2 ? 'vermelha' : 'amarela' })),
+    ...(c4Q.length ? await rest(`qualidade_respostas?codigo=in.(${enc(lista(c4Q))})&resposta=in.(amarela,vermelha)&select=codigo,area,pergunta,resposta`) : []).map((x: X) => ({ ...x, grav: x.resposta })),
+  ]
+  const info4 = Object.fromEntries(t4.map((r) => [r.codigo, r]))
+  const rc: Record<string, Record<string, { area: string; pergunta: string; vezes: number; vermelhas: number; semana: number; datas: string[] }>> = {}
+  for (const x of it4) {
+    const r = info4[x.codigo]; if (!r) continue
+    const cid = r.casa_id as string, k = x.area + '::' + x.pergunta
+    const m = (rc[cid] = rc[cid] || {})
+    const a = (m[k] = m[k] || { area: x.area, pergunta: x.pergunta, vezes: 0, vermelhas: 0, semana: 0, datas: [] })
+    a.vezes++; if (x.grav === 'vermelha') a.vermelhas++
+    if (r.data >= ini) a.semana++
+    a.datas.push(r.data)
+  }
+  // deno-lint-ignore no-explicit-any
+  const reincidencias = Object.fromEntries(casas.map((c: any) => [c.id, Object.values(rc[c.id] || {}).filter((a) => a.semana > 0 && a.vezes > 1)
+    .map((a) => ({ ...a, datas: [...new Set(a.datas)].sort() })).sort((a, b) => b.vezes - a.vezes || b.vermelhas - a.vermelhas).slice(0, 8)]))
+  return { semana: { de: ini, ate: fim }, anterior: { de: antIni, ate: antFim }, modelos, linhas, piores, piores_por_casa: porCasa, reincidencias, reinc_desde: r4Ini, tem_demo: nossos.some((d: Lin) => d.demo && d.data >= ini) }
 }
 
 // ---------------------------------------------------------------- EPI
@@ -351,8 +377,10 @@ async function rota(req: Request, metodo: string, p: string[], q: URLSearchParam
     if (!r) throw new Erro('relatório não existe', 404)
     const f = (n: number | null) => (n == null ? '—' : Number(n).toFixed(2).replace('.', ','))
     const d = r.data.split('-').reverse().join('/')
-    const assunto = `Relatório ${r.modelo_nome} — ${r.casa?.nome || r.casa_id} — ${d} — nota ${f(r.calc.nota)}%`
-    const corpo = [`Olá,`, ``, `Segue o relatório de ${r.modelo_nome} da visita de ${d} (${r.nutri}).`, `Nota final: ${f(r.calc.nota)}%`, ``,
+    // modelo que já se chama "Relatório estrutural" não vira "Relatório Relatório estrutural"
+    const titulo = /^relat[óo]rio\b/i.test(r.modelo_nome || '') ? r.modelo_nome : `Relatório ${r.modelo_nome}`
+    const assunto = `${titulo} — ${r.casa?.nome || r.casa_id} — ${d} — nota ${f(r.calc.nota)}%`
+    const corpo = [`Olá,`, ``, `Segue o ${titulo.charAt(0).toLowerCase() + titulo.slice(1)} da visita de ${d} (${r.nutri}).`, `Nota final: ${f(r.calc.nota)}%`, ``,
       r.ncs.length ? `Pontos de atenção (${r.ncs.length}):` : 'Nenhum ponto fora do padrão. Parabéns à equipe!',
       ...r.ncs.slice(0, 20).map((z: B) => `- ${z.resposta === 'vermelha' ? '[VERMELHO]' : '[AMARELO]'} ${z.area}: ${z.pergunta}${z.comentario ? ' — ' + z.comentario : ''}`),
       ``, `O PDF completo (com fotos) vai em anexo.`, ``, `Qualidade — Grupo Botequim`].join('\n')

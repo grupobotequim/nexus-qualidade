@@ -71,6 +71,7 @@ rep(", ['painel', '📌 Pendências e ranking']]", "]")
 rep("window.open('/nutri?aba=hist')", "toast('relatório do app antigo — fica na Secretaria')")
 rep("Os relatórios antigos do app de terceiro (lidos do grupo) estão em 📌 Pendências e ranking › Histórico.", "Os relatórios antigos do app de terceiro ficam na Secretaria (contam no comparativo).")
 rep("""function telaPainel() { $('#main').innerHTML = `<div class="card" style="padding:0;overflow:hidden"><iframe src="/nutri" style="width:100%;height:calc(100vh - 150px);border:0;display:block"></iframe></div>` }""", "")
+rep(", painel: telaPainel })", " })")  # 23/10: sem isso o ir() quebrava (telaPainel não existe online) e a tela ficava em "carregando…"
 rep("""<h1>📋 Qualidade <small>Grupo Botequim</small></h1>""", """<h1>📋 Qualidade <small>Grupo Botequim</small><button onclick="sair()" style="margin-left:auto;background:none;border:0;color:#d5efea;font-size:13px;padding:4px">sair</button></h1>""")
 
 # --- 🖊️ caneta: depois de tirar a foto, marca/circula com o dedo; vale a marcada, a original vai junto

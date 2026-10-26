@@ -148,15 +148,15 @@ async function entrar(ev) {
 function sair() { if (!confirm('Sair deste aparelho?')) return; LS.set('qual_sessao', ''); SESS = ''; location.reload() }
 function toast(m, ms) { const d = document.createElement('div'); d.className = 'toast'; d.textContent = m; document.body.appendChild(d); setTimeout(() => d.remove(), ms || 2600) }
 function modal(html) { $('#modal').innerHTML = html ? `<div class="modal" onclick="if(event.target===this)modal('')"><div class="box">${html}</div></div>` : '' }
-const FACES = [['verde', '🟢', 'Conforme'], ['amarela', '🟡', 'Parcial'], ['vermelha', '🔴', 'Não conf.'], ['na', '⚪', 'N/A']]
-const chipResp = (r) => r === 'verde' ? '<span class="chip v">🟢 Conforme</span>' : r === 'amarela' ? '<span class="chip a">🟡 Parcial</span>' : r === 'vermelha' ? '<span class="chip r">🔴 Não conforme</span>' : r === 'na' ? '<span class="chip n">N/A</span>' : '<span class="chip n">—</span>'
+const FACES = [['verde', '😃', 'Conforme'], ['amarela', '😐', 'Parcial'], ['vermelha', '☹️', 'Não conf.'], ['na', '➖', 'N/A']]
+const chipResp = (r) => r === 'verde' ? '<span class="chip v">😃 Conforme</span>' : r === 'amarela' ? '<span class="chip a">😐 Parcial</span>' : r === 'vermelha' ? '<span class="chip r">☹️ Não conforme</span>' : r === 'na' ? '<span class="chip n">N/A</span>' : '<span class="chip n">—</span>'
 
 let CASAS = [], MODELOS = []
 const nomeCasa = (id) => { const c = CASAS.find((x) => x.id === id); return c ? c.nome + (c.apelido && c.tipo === 'loja' ? ' · ' + c.apelido : '') : id }
 const ABAS = [['preencher', '✍️ Preencher'], ['relatorios', '📄 Relatórios'], ['comparativo', '📊 Comparativo'], ['epi', '🦺 Uniforme e EPI'], ['modelos', '🧩 Modelos'], ['casas', '🏠 Restaurantes']]
 let ABA = new URLSearchParams(location.search).get('aba') || 'preencher'
 function nav() { $('#nav').innerHTML = ABAS.map(([id, r]) => `<button class="${id === ABA ? 'on' : ''}" onclick="ir('${id}')">${r}</button>`).join('') }
-function ir(id, arg) { ABA = id; nav(); $('#barra').innerHTML = ''; window.scrollTo(0, 0); ({ preencher: telaInicio, relatorios: telaRelatorios, comparativo: telaComparativo, epi: telaEpi, modelos: telaModelos, casas: telaCasas, painel: telaPainel })[id](arg) }
+function ir(id, arg) { ABA = id; nav(); $('#barra').innerHTML = ''; window.scrollTo(0, 0); ({ preencher: telaInicio, relatorios: telaRelatorios, comparativo: telaComparativo, epi: telaEpi, modelos: telaModelos, casas: telaCasas })[id](arg) }
 async function carregarBase() { [CASAS, MODELOS] = await Promise.all([api('/api/qualidade/casas'), api('/api/qualidade/modelos')]) }
 
 // ======================================================= PREENCHER
@@ -201,7 +201,7 @@ async function abrir(codigo) {
     ${a.itens.map((q) => `<div class="q" id="q-${q.id}"><div class="txt">${esc(q.pergunta)}<span class="peso">peso ${String(q.peso).replace('.', ',')}</span></div>
       <div class="faces">${FACES.map(([k, e, t]) => `<button class="${k}" onclick="resp(${q.id},'${k}')"><span class="e">${e}</span>${t}</button>`).join('')}</div>
       <div class="extra"><textarea rows="2" placeholder="O que viu? (ex.: 2 potes de molho sem etiqueta na câmara)" oninput="coment(${q.id},this.value)"></textarea>
-        <div class="row" style="margin-top:6px"><label class="mini sec" style="flex:0;margin:0;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">📷 Foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="foto(${q.id},this)"></label><div class="fotos" id="f-${q.id}"></div></div></div></div>`).join('')}
+        <div class="row" style="margin-top:6px"><label class="mini sec" style="flex:0;margin:0;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">📷 Foto<input type="file" accept="image/*" capture="environment" style="display:none" onchange="foto(${q.id},this)"></label><label class="mini sec" style="flex:0;margin:0 0 0 6px;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">🖼️ Galeria<input type="file" accept="image/*" style="display:none" onchange="foto(${q.id},this)"></label><div class="fotos" id="f-${q.id}"></div></div></div></div>`).join('')}
   </details>`).join('')}
   <div class="card"><h2>Observações gerais</h2><textarea id="i-obs" rows="3" oninput="REL.obs=this.value;agendarSalvar()" placeholder="Resumo da visita, orientações dadas, treinamento aplicado…">${esc(REL.obs || '')}</textarea></div>
   <div class="row"><button class="perigo" onclick="apagarRel('${REL.codigo}')">Apagar este relatório</button></div>`
@@ -318,7 +318,9 @@ async function telaComparativo(sem) {
     ${linhas.map((l) => `<tr><td><b>${l.pos ? l.pos + 'º' : '—'}</b></td><td><b>${esc(l.nome)}</b><div class="sub">${esc(l.apelido || '')}</div></td>
       ${d.modelos.map((m) => { const c = l.cel[m]; return `<td>${c.nota != null ? `<div class="nota-cel ${corN(c.nota)}">${f2(c.nota)}</div><div class="sub">${c.relatorios.map((r) => `<a href="#" onclick="${r.fonte === 'sistema' ? `abrir('${r.codigo}')` : `toast('relatório do app antigo — fica na Secretaria')`};return false">${brc(r.data)}${r.demo ? '·demo' : ''}</a>`).join(' ')}</div>` : '<span class="sub">sem relatório</span>'}${c.delta != null ? '<div>' + dl(c.delta) + '</div>' : ''}</td>` }).join('')}
       <td><div class="nota-cel ${corN(l.geral.nota)}">${f2(l.geral.nota)}</div><div class="sub">${l.geral.n} relat.</div></td><td>${dl(l.geral.delta)}<div class="sub">antes ${f2(l.geral.anterior)}</div></td></tr>`).join('')}</table></div>
-  <div class="card"><h2>Piores itens da semana</h2><div class="sub" style="margin-bottom:8px">perguntas que mais saíram 🟡/🔴 somando todas as casas</div>
+  <div class="card"><h2>Reincidências de cada casa</h2><div class="sub" style="margin-bottom:8px">o que saiu 😐/☹️ nesta semana e já tinha saído antes na mesma casa (desde ${brc(d.reinc_desde)})</div>
+    ${linhas.map((l) => { const rs = (d.reincidencias || {})[l.id] || []; return `<div style="padding:8px 0;border-bottom:1px solid var(--bord)"><b>${esc(l.nome)}</b>${rs.length ? ` <span class="chip r">${rs.length} reincidente${rs.length > 1 ? 's' : ''}</span>` + rs.map((a) => `<div style="margin:4px 0 0 8px"><b>${a.vezes}×</b> ${esc(a.pergunta)} <span class="sub">· ${esc(a.area)} · ${a.datas.map(brc).join(', ')}${a.vermelhas ? ' · ' + a.vermelhas + '☹️' : ''}</span></div>`).join('') : ' <span class="sub">— sem reincidência 🎉</span>'}</div>` }).join('')}</div>
+  <div class="card"><h2>Geral da semana — todas as casas</h2><div class="sub" style="margin-bottom:8px">perguntas que mais saíram 😐/☹️ somando todas as casas</div>
     ${d.piores.length ? d.piores.map((p) => `<div style="padding:7px 0;border-bottom:1px solid var(--bord)"><div><b>${p.vezes}×</b> ${esc(p.pergunta)} <span class="sub">· ${esc(p.area)}</span></div>
       <div style="display:flex;align-items:center;gap:8px;margin-top:3px"><div style="height:6px;border-radius:3px;background:var(--verm);opacity:.75;width:${(p.vezes / max) * 60}%"></div><span class="sub">${Object.entries(p.casas).map(([c, n]) => esc((CASAS.find((x) => x.id === c) || {}).nome || c) + (n > 1 ? ' ' + n + '×' : '')).join(' · ')}</span></div></div>`).join('') : '<div class="vazio">nenhum item reprovado nesta semana 🎉</div>'}</div>
   <div class="card"><h2>O que mais pegou em cada casa</h2>${linhas.map((l) => `<div style="padding:6px 0;border-bottom:1px solid var(--bord)"><b>${esc(l.nome)}</b>: <span class="sub">${(d.piores_por_casa[l.id] || []).map(esc).join(' · ') || 'nada reprovado'}</span></div>`).join('')}</div>`
@@ -367,7 +369,7 @@ async function novaEntrega() {
     <div class="row"><div><label>CA (EPI)</label><input id="e-ca" placeholder="nº do CA"></div><div><label>Validade do CA</label><input id="e-cav" type="date"></div></div>
     <label>Trocar em</label><input id="e-troca" type="date">
     <label>Assinatura de quem recebeu</label><canvas class="assin" id="e-assin"></canvas><div class="row" style="margin-top:4px"><button class="mini" style="flex:0" onclick="limparAssin()">limpar assinatura</button>
-    <label class="mini" style="flex:0;margin:0;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">📷 ou foto do recibo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="fotoRecibo(this)"></label><span id="e-fok" class="sub"></span></div>
+    <label class="mini" style="flex:0;margin:0;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">📷 ou foto do recibo<input type="file" accept="image/*" capture="environment" style="display:none" onchange="fotoRecibo(this)"></label><label class="mini" style="flex:0;margin:0 0 0 6px;cursor:pointer;padding:6px 12px;border-radius:10px;background:var(--ac2);color:var(--ac);white-space:nowrap">🖼️ Galeria<input type="file" accept="image/*" style="display:none" onchange="fotoRecibo(this)"></label><span id="e-fok" class="sub"></span></div>
     <label>Observação</label><input id="e-obs">
     <label style="display:flex;gap:8px;align-items:center;font-weight:500"><input type="checkbox" id="e-demo" style="width:auto"> registro de teste (DEMO)</label>
     <div class="row" style="margin-top:14px"><button onclick="modal('')">Cancelar</button><button class="pri" onclick="salvarEntrega()">Salvar entrega</button></div>`)
